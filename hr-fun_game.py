@@ -93,7 +93,6 @@ def find_most_optimal_move(a: list[int], b: list[int]) -> int:
 
     return best_index
 
-
 if __name__ == '__main__':
 
     t = get_T_value()
