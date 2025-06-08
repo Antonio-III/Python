@@ -1,11 +1,4 @@
-# Source: https://www.hackerrank.com/challenges/fun-game-1/problem
-# Complete the 'funGame' function below.
-#
-# The function is expected to return a STRING.
-# The function accepts following parameters:
-#  1. INTEGER_ARRAY a
-#  2. INTEGER_ARRAY b
-
+# A script that solves this problem (https://www.hackerrank.com/challenges/fun-game-1/problem).
 def funGame(a: list[int], b: list[int]) -> str:
     """
     Returns results of a game using an algorithm that finds the index whose value is the highest between 2 arrays.
