@@ -2,6 +2,8 @@
 def funGame(a: list[int], b: list[int]) -> str:
     """
     Returns results of a game using an algorithm that finds the index whose value is the highest between 2 arrays.
+
+    Runtime: O(n**2).
     """
     # Score 
     P1, P2 = 0, 0
@@ -32,6 +34,8 @@ def funGame(a: list[int], b: list[int]) -> str:
 def validate_range_inclusive(val: int, min_range: int, max_range: int) -> int:
     """
     Checks if val passes the constraints of the problem. Returns val if pass. Raises an error if fail. 
+
+    Runtime: O(1).
     """
     if not (min_range <= val <= max_range):
         raise ValueError(f'{val} out of range [{min_range}, {max_range}].')
@@ -39,7 +43,9 @@ def validate_range_inclusive(val: int, min_range: int, max_range: int) -> int:
 
 def get_T_value() -> int:
     """
-    Returns error-free T that matches the constraints.
+    Returns error-free T that matches the constraints. 1 <= T <= 10
+
+    Runtime: O(1).
     """
     constraints = 1, 10
     try:
@@ -53,7 +59,9 @@ def get_T_value() -> int:
 
 def get_n_value() -> int:
     """
-    Returns error-free n that matches the constraints.
+    Returns error-free n that matches the constraints. Length n of array must be: 1 <= n <= 1000.
+
+    Runtime: O(1).
     """
     constraints = 1, 1000
     try:
@@ -65,8 +73,11 @@ def get_n_value() -> int:
     
 def get_ab_value() -> tuple[list[int], list[int]]:
     """
-    Return error-free arrays a and b that matches the constraints.
+    Return error-free arrays a and b that matches the constraints. Elements of arrays a, b must be: 1 <= a[i], b[i] <= 100k.
+
+    Runtime: O(2n) ≈ O(n). a and b of size n are looped through once.
     """
+    # Elements of an array must be between these values.
     constraints = 1, 10**5
     try:
         a = [validate_range_inclusive(int(char), *constraints) for char in input().rstrip().split()]
@@ -81,11 +92,13 @@ def get_ab_value() -> tuple[list[int], list[int]]:
 def find_most_optimal_move(a: list[int], b: list[int]) -> int:
     """
     Return an index whose value, when both arrays are combined, is the highest.
+
+    Runtime: O(n).
     """
     best_gain = 0
     best_index = -1
     for i in range(len(a)):
-        gain = sum([a[i] + b[i]]) 
+        gain = a[i] + b[i]
 
         if gain > best_gain:
             best_gain = gain
