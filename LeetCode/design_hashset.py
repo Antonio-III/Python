@@ -1,4 +1,4 @@
-# My solution for https://leetcode.com/explore/learn/card/hash-table/182/practical-applications/1140/
+# My solution for https://leetcode.com/explore/learn/card/hash-table/182/practical-applications/1139/
 
 class MyHashSet:
     class Bucket(list):
