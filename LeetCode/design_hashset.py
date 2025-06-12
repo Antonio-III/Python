@@ -17,7 +17,7 @@ class MyHashSet:
         """
         Add key to hash set. 
         
-        Steps: 1 + α + 1 (amortized), where α = n (at most 10^4) / b (fixed 10007). Initial +1 is the index calculation.
+        Steps: 1 + α + 1 (amortized), where α = n elements (at most 10^4) / b (fixed 10007). Initial +1 is the index calculation.
         Average: O(1) because 10^4/10007 ≈ 0.9993.
         Worst: O(n).
         """
