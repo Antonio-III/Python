@@ -1,3 +1,5 @@
+# My solution for https://leetcode.com/explore/learn/card/hash-table/182/practical-applications/1140/
+
 class MyHashSet:
     class Bucket(list):
         def __init__(self, convertible_to_list=[]):
