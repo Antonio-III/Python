@@ -23,8 +23,7 @@ class MyHashMap:
             
     def __init__(self):
         self.bucket_count = 10007
-        self.hash_map = [self.Bucket()] * self.bucket_count
-
+        self.hash_map = [self.Bucket() for _ in range(self.bucket_count)]
     def put(self, key: int, value: int) -> None:
         """
         Insert a pair or replace.
@@ -85,4 +84,3 @@ class MyHashMap:
         index_of_pair = index_of_pair = bucket_keys.index(key) if key in bucket_keys else -1 # α + α or 1
         
         bucket.pop(index_of_pair) if key in bucket_keys else None # α + α or 1
-
