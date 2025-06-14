@@ -23,7 +23,7 @@ class MyHashMap:
             
     def __init__(self):
         self.bucket_count = 10007
-        self.hashmap = [self.Bucket()] * self.bucket_count
+        self.hash_map = [self.Bucket()] * self.bucket_count
 
     def put(self, key: int, value: int) -> None:
         """
@@ -35,8 +35,7 @@ class MyHashMap:
 
         Worst: O(n)
         """
-
-        bucket = self.hashmap[key % self.bucket_count] # +1
+        bucket = self.hash_map[key % self.bucket_count] # +1
         bucket_keys = bucket.keys() # +α
 
         index_of_pair = bucket_keys.index(key) if key in bucket_keys else -1 # α + (α or 1)
@@ -57,7 +56,7 @@ class MyHashMap:
         """
         index = key % self.bucket_count # +1
 
-        bucket = self.hashmap[index] # +1
+        bucket = self.hash_map[index] # +1
         bucket_keys = [bucket[i][0] for i in range(len(bucket))] # +α
         
         index_of_pair = bucket_keys.index(key) if key in bucket_keys else -1 # α + α or 1
@@ -80,17 +79,10 @@ class MyHashMap:
         """
         index = key % self.bucket_count # +1
         
-        bucket = self.hashmap[index] # +1
+        bucket = self.hash_map[index] # +1
         bucket_keys = [bucket[i][0] for i in range(len(bucket))] # +α
         
         index_of_pair = index_of_pair = bucket_keys.index(key) if key in bucket_keys else -1 # α + α or 1
         
         bucket.pop(index_of_pair) if key in bucket_keys else None # α + α or 1
 
-x = False or 1
-b = MyHashMap()
-b.put(1,2)
-b.put(2,3)
-b.put(2,2)
-b.put(1,20)
-print(1 and None and 1)
