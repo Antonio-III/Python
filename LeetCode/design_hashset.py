@@ -18,7 +18,9 @@ class MyHashSet:
         Add key to hash set. 
         
         Steps: 1 + α + 1 (amortized), where α = n elements (at most 10^4) / b (fixed 10007). Initial +1 is the index calculation.
+
         Average: O(1) because 10^4/10007 ≈ 0.9993.
+
         Worst: O(n).
         """
         # index corresponds to which bucket a key will be mapped onto.
@@ -31,7 +33,9 @@ class MyHashSet:
         Remove key from hash set.
         
         Steps: 1 + 3α, due to membership test (α), and removal (2α, scan & shift (remove)).
+
         Average: O(1).
+
         Worst: O(n).
         """
         index = key % self.bucket
@@ -43,7 +47,9 @@ class MyHashSet:
         Membership test if key is in set object.
         
         Steps: 1 + α.
+
         Average: O(1).
+        
         Worst: O(n).
         """
         index = key % self.bucket
