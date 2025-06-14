@@ -41,13 +41,9 @@ class MyHashMap:
 
         index_of_pair = bucket_keys.index(key) if key in bucket_keys else -1 # α + (α or 1)
         
-        # 1 + ( (1 + 1) or (1 amortised + 1 + 1) )
-        bucket[index_of_pair][1] = (
-             (print(f'key: {key} replaced with {[key,value]}') or value) if index_of_pair != -1 
-             else (
-                  bucket.append([key, value]) or print(f'key: {key} added as {[key,value]}') and value
-                  )
-        )
+        # 1 + ( 1 or (1 amortised + 1) )
+        bucket[index_of_pair][1] = value if index_of_pair != -1 else bucket.append([key, value]) or value
+
 
     def get(self, key: int) -> int:
         """
