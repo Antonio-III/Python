@@ -1,9 +1,11 @@
-import qrcode
-import os
 """
 Generates a QR code file based on the inputted text.
 """
-def main(data:str,file_name:str)->None:
+
+import qrcode
+import os
+
+def main(data:str, file_name:str)->None:
     """
     Generates and downloads the QR code, and outputs the QR code image's path.
     """

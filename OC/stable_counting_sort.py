@@ -11,7 +11,7 @@ def stable_counting_sort(array: list[int], base: int = 10, power_of_base: int = 
     place_value = base**(power_of_base)
 
     # The output array. Starts as the length of the input array but whose values are null or 0.
-    out_array = [0] * len(array)
+    out = [0] * len(array)
 
     # Base 10 has 10 symbols. We want to be able to count how many of each symbols we have encountered.
     count = [0] * base
@@ -46,7 +46,7 @@ def stable_counting_sort(array: list[int], base: int = 10, power_of_base: int = 
     for num in array[::-1]:
         symbol = (num // place_value) % base
 
-        out_array[count[symbol] - 1] = num
+        out[count[symbol] - 1] = num
         count[symbol] -= 1
 
-    return out_array
+    return out

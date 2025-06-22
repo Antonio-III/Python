@@ -3,21 +3,21 @@ This script modifies a csv file's column. Right now, the file only supports repl
 """
 import typing
 
-def main(dir:str,col_num:int)->None:
-    table=get_csv_data(dir)
-    scores=extract_col(table,col_num,False)
-    new_scores=modify_column(scores, col_num)
-    table=replace_col(table,col_num,new_scores,False)
+def main(dir: str, col_num: int) -> None:
+    table = get_csv_data(dir)
+    scores = extract_col(table, col_num, False)
+    new_scores = modify_column(scores, col_num)
+    table = replace_col(table, col_num, new_scores, False)
 
     replace_csv_data(dir,table)
     print("Process completed.")
 
-def get_csv_data(dir:str)->list[str]:
+def get_csv_data(dir: str) -> list[str]:
     """
     1. Collects file data from the given directory.
     2. It is otherwise considered a generic "get all data from file" function, but slightly modified to fit the formatting of csv files.
     """
-    csv_data=[]
+    csv_data = []
     with open(dir,"r") as file_reader:
         # csv files have a "\n" at the end so we strip it.
         csv_data+=[row.strip().split(",") for row in file_reader]
