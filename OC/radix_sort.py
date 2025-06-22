@@ -9,11 +9,11 @@ Table of Contents:
 """
 from stable_counting_sort import stable_counting_sort
 
-def radix_sort(array: list[int], max_digits: int) -> tuple[list[int], list[int]]:
+def radix_sort(array: list[int], max_digits: int) -> list[int]:
     """
     Performs the Radix Sort Algorithm, which sorts numbers by their place value.
     """
-    return _radix_sort_recursive(array=array, max_digits=max_digits), _radix_sort_iterative(array=array, max_digits=max_digits)
+    return _radix_sort_recursive(array=array, max_digits=max_digits) or _radix_sort_iterative(array=array, max_digits=max_digits)
 
 def _radix_sort_recursive(array: list[int], max_digits: int, base: int = 10, power_of_base: int = 0) -> list[int]:
     """
