@@ -1,7 +1,7 @@
 """
 Finds a duplicate within a single list object.
 
-Table of Contents:
+Table of Contents
     (import) radix_sort
     (import) count_digits
     contains_duplicates

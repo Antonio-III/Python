@@ -1,5 +1,8 @@
 """
 This script modifies a csv file's column. Right now, the file only supports replacing the column with new data.
+
+Table of Contents
+    
 """
 import typing
 
