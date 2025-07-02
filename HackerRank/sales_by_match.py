@@ -18,8 +18,7 @@ import sys
 
 def sockMerchant(n, ar):
     # Write your code here
-    unique_socks = set(ar)
-    return sum([ar.count(unique_sock)//2 for unique_sock in unique_socks])
+    return sum([ar.count(unique_sock)//2 for unique_sock in set(ar)])
 
 if __name__ == '__main__':
     fptr = open(os.environ['OUTPUT_PATH'], 'w')
