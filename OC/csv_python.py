@@ -2,7 +2,15 @@
 This script modifies a csv file's column. Right now, the file only supports replacing the column with new data.
 
 Table of Contents
-    
+    main
+    get_csv_data
+    replace_csv_data
+    modify_column
+
+    *imported functions*
+        replace_col 
+        extract_col
+        write_to_file
 """
 import typing
 
@@ -21,12 +29,12 @@ def get_csv_data(dir: str) -> list[str]:
     2. It is otherwise considered a generic "get all data from file" function, but slightly modified to fit the formatting of csv files.
     """
     csv_data = []
-    with open(dir,"r") as file_reader:
+    with open(dir, "r") as file_reader:
         # csv files have a "\n" at the end so we strip it.
         csv_data+=[row.strip().split(",") for row in file_reader]
     return csv_data
 
-def replace_csv_data(dir:str,new_content:list[str])->None:
+def replace_csv_data(dir: str, new_content: list[str]) -> None:
     """
     1. Writes data into a truncated file in the given directory.
     2. Function name uses the name csv for the purposes of this script. It is otherwise considered a generic "write to file" function.
@@ -34,7 +42,7 @@ def replace_csv_data(dir:str,new_content:list[str])->None:
     write_to_file(dir,new_content)
     return None
 
-def modify_column(column:list, col_num:int)->list[str]:
+def modify_column(column: list, col_num: int) -> list[str]:
     """
     1. Replace the target column's inputted text with another inputted text.
     """
