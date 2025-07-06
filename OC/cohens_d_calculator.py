@@ -1,5 +1,5 @@
 """
-Calculates the Cohen's d using data from control group and experiment groups. Both files must be csv files.
+Calculates the Cohen's d using data from control group and experiment groups. Both datasets must be csv files.
 
 Table of Contents
     main
