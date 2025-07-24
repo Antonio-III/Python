@@ -41,9 +41,9 @@ def map_uniques_and_their_count(uniques: set[int]) -> list[list[int]]:
     """
     T: O(k^2)
 
-    S: O(2k) in each iteration, but n at exit. The additional n is due to the allocation for `list(uniques)`.
+    S: O(2k) in each iteration, but k at exit. The additional k is due to the allocation for `list(uniques)`.
 
-    k variable is used under the assumption that we are sorting a subset of `unique`, a subset of our input array.
+    k variable is used under the assumption that we are sorting `uniques`, a subset of `out`. This subset can be at most of size n.
     """
     return [[e, list(uniques).count(e)] for e in uniques]
 
