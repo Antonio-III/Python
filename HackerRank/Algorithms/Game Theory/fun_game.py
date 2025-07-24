@@ -1,4 +1,6 @@
-# A script that solves this problem (https://www.hackerrank.com/challenges/fun-game-1/problem).
+"""
+My solution for https://www.hackerrank.com/challenges/fun-game-1/problem.
+"""
 def funGame(a: list[int], b: list[int]) -> str:
     """
     Returns results of a game using an algorithm that finds the index whose value is the highest between 2 arrays.

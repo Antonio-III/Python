@@ -1,4 +1,6 @@
-# My solution for: https://www.hackerrank.com/challenges/sock-merchant/problem
+"""
+My solution for: https://www.hackerrank.com/challenges/sock-merchant/problem
+"""
 #!/bin/python3
 
 import math

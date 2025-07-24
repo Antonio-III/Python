@@ -1,4 +1,6 @@
-# My solution for https://www.hackerrank.com/challenges/counting-valleys/problem
+"""
+My solution for https://www.hackerrank.com/challenges/counting-valleys/problem
+"""
 #!/bin/python3
 
 import math
