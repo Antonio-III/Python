@@ -1,4 +1,6 @@
+"""
 #!/bin/python3
+"""
 
 import math
 import os
@@ -19,9 +21,9 @@ def groupSort(arr):
     # Write your code here
     # suppose arr = [3, 3, 1, 2, 1]
     
-    uniques = get_unique_values(arr) 
+    uniques = get_unique_values_v2(arr) 
     
-    out = map_uniques_and_their_count(uniques)
+    out = map_uniques_to_their_count(arr, uniques)
     
     out = sort_in_descending_order(out)
     
@@ -29,23 +31,81 @@ def groupSort(arr):
 
     return out
 
-def get_unique_values(arr: list[int]) -> set[int]:
+def get_unique_values_v1(arr: list[int]) -> list[int]:
     """
+    Returns unique values of `arr`, but order is not preserved.
+
     T: O(n)
 
     S: O(k), k approx. = n
     """
-    return set(arr)
+    uniques = list(set(arr))
 
-def map_uniques_and_their_count(uniques: set[int]) -> list[list[int]]:
+    return uniques
+
+def get_unique_values_v2(arr: list[int]) -> list[int]:
     """
-    T: O(k^2)
+    Returns unique values of `arr`, and order is preserved.
 
-    S: O(2k) in each iteration, but k at exit. The additional k is due to the allocation for `list(uniques)`.
+    T: O(n)
 
-    k variable is used under the assumption that we are sorting `uniques`, a subset of `out`. This subset can be at most of size n.
+    S: O(2k+n), k approx. = n
     """
-    return [[e, list(uniques).count(e)] for e in uniques]
+
+    uniques = []
+    seen = set()
+    for i in arr:
+        if i not in seen:
+            uniques.append(i)
+            seen.add(i)
+    return uniques
+
+def get_unique_values_v3(arr: list[int]) -> list[int]:
+    """
+    Returns unique values of `arr`, and order is preserved. Unoptimized.
+
+    T: O(n^2). Can be generalized to O(n*k) where
+
+    k = n-1. The size of `uniques` in the worst case is equal to the current amount of iteration (not n necessarily), so k = n-1, and we will be effectively doing (k) comparisons per nth iteration. The pattern there might look like `0, 1, 2, 3, n-1, ...` and it looks a lot like The sum of first n integers whose formula is n(n+1)/2 to find the sum of the first n terms.
+
+    The formula can be derived from writing the first n integers twice: in ascending and descending order.
+        S_asc =  1 + 2 + 3 + ... + (n-1) + n
+        S_desc = n + (n-1) + (n-2) + ... + 2 + 1
+
+    We add the terms by adding the nth ascending and descending term together.
+        2S = (1+n) + (2+n-1) + (3+n-2) + ... + (n-1+2) + (n+1)
+
+    Each pair then simplifies to:
+        2S = (n+1) + (n+1) + (n+1) + ... + (n+1) + (n+1) (n times)
+
+    2S = n+1 * n
+
+    S = n*(n+1)/2
+
+    S: O(n) because if `arr` only contains unique elements, we equivalently creating another copy of `arr`.
+    """
+
+    uniques = []
+    
+    for i in arr:
+        # `not in` operation performs a linear scan of `uniques`. O(k)
+        if i not in uniques:
+            uniques.append(i)
+    return uniques
+
+def map_uniques_to_their_count(arr: list[int], uniques: list[int]) -> list[list[int]]:
+    """
+    Returns a 2d array where each inner list contains `a unique element`, and its `count` in the original array. For instance, given an input of:
+        arr = [3, 3, 1, 2, 1]
+        uniques = [3, 1, 2]
+    
+    The function will return `[[3, 2], [1, 2], [2, 1]]`. This is because the first element of every inner list are members of `uniques` and the second element of every inner list are the amount of times the respective first element has appeared in the original array `arr`.
+
+    T: O(n^2)
+
+    S: O(n) worst case. Can be O(k) if `arr` contains duplicates
+    """
+    return [[e, arr.count(e)] for e in uniques]
 
 def sort_in_descending_order(out: list[list[int]]) -> list[list[int]]:
     """
@@ -92,21 +152,25 @@ def sort_matching_frequencies(out: list[list[int]]) -> list[list[int]]:
 
     return out
 
-    
 if __name__ == '__main__':
-    fptr = open(os.environ['OUTPUT_PATH'], 'w')
+    # Uncomment these if you want to use in HackerRank's IDE.
+    # fptr = open(os.environ['OUTPUT_PATH'], 'w')
 
-    arr_count = int(input().strip())
+    # arr_count = int(input().strip())
 
-    arr = []
+    # arr = []
 
-    for _ in range(arr_count):
-        arr_item = int(input().strip())
-        arr.append(arr_item)
+    # for _ in range(arr_count):
+    #     arr_item = int(input().strip())
+    #     arr.append(arr_item)
 
-    result = groupSort(arr)
+    # result = groupSort(arr)
 
-    fptr.write('\n'.join([' '.join(map(str, x)) for x in result]))
-    fptr.write('\n')
+    # fptr.write('\n'.join([' '.join(map(str, x)) for x in result]))
+    # fptr.write('\n')
 
-    fptr.close()
+    # fptr.close()
+    arr = [3, 3, 1, 2, 1]
+    uniques = get_unique_values_v2(arr)
+    # uniques = map_uniques_to_their_count(arr, uniques)
+    print(map_uniques_to_their_count(arr, uniques))
