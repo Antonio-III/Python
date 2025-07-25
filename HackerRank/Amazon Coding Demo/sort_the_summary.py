@@ -23,11 +23,11 @@ def groupSort(arr):
     
     uniques = get_unique_values_v2(arr) 
     
-    out = map_uniques_to_their_count(arr, uniques)
+    out = associate_uniques_with_their_count(arr, uniques)
     
-    out = sort_in_descending_order(out)
+    out = sort_2d_arr_by_frequencies_in_descending_order(out)
     
-    out = sort_matching_frequencies(out)
+    out = sort_2d_arr_by_uniques_in_ascending_order(out)
 
     return out
 
@@ -49,7 +49,7 @@ def get_unique_values_v2(arr: list[int]) -> list[int]:
 
     T: O(n)
 
-    S: O(2k+n), k approx. = n
+    S: O(k), k approx. = n, O(2k) at execution.
     """
 
     uniques = []
@@ -82,7 +82,7 @@ def get_unique_values_v3(arr: list[int]) -> list[int]:
 
     S = n*(n+1)/2
 
-    S: O(n) because if `arr` only contains unique elements, we equivalently creating another copy of `arr`.
+    S: O(n) because if `arr` only contains unique elements, we are equivalently creating another copy of `arr`.
     """
 
     uniques = []
@@ -93,7 +93,7 @@ def get_unique_values_v3(arr: list[int]) -> list[int]:
             uniques.append(i)
     return uniques
 
-def map_uniques_to_their_count(arr: list[int], uniques: list[int]) -> list[list[int]]:
+def associate_uniques_with_their_count(arr: list[int], uniques: list[int]) -> list[list[int]]:
     """
     Returns a 2d array where each inner list contains `a unique element`, and its `count` in the original array. For instance, given an input of:
         arr = [3, 3, 1, 2, 1]
@@ -107,7 +107,7 @@ def map_uniques_to_their_count(arr: list[int], uniques: list[int]) -> list[list[
     """
     return [[e, arr.count(e)] for e in uniques]
 
-def sort_in_descending_order(out: list[list[int]]) -> list[list[int]]:
+def sort_2d_arr_by_frequencies_in_descending_order(out: list[list[int]]) -> list[list[int]]:
     """
     T: O(nlogn) 
 
@@ -115,40 +115,44 @@ def sort_in_descending_order(out: list[list[int]]) -> list[list[int]]:
     """
     return sorted(out, key=lambda pair: pair[1], reverse=True)
     
-def sort_matching_frequencies(out: list[list[int]]) -> list[list[int]]:
+def sort_2d_arr_by_uniques_in_ascending_order(out: list[list[int]]) -> list[list[int]]:
     """
     Takes in a [number, frequency] array like `[[3, 2], [1, 2], [2, 1]]` and sorts the same-frequency lists in ascending order. In the input, `[3, 2] and [1, 2]` have the same frequency (2) and are not in ascending order (3 comes before 1, which is incorrect), so we take this slice and perform a sort operation on them.
     
     Returns `[[1, 2], [3, 2], [2, 1]]`.
 
+    The algorithm works by iterating through the indices of `out` and when a change of frequency has been found, we sort the corresponding indices accordingly. In the case of when we are at the last element, we perform a check if the frequencies match from what we are currently tracking, if they match, we perform a sort including the last element, if we do not, a sort is still performed but excluding the last element.
+
     Time complexity: O(n log n). The sorting time complexity goes from O(n) — where all elements are unique — to O(n log n) — where all elements have the same frequency.
 
     Space complexity: O(n), corresponds to the input array. Worst case is O(2n) at the last iteration if the array only had 1 frequency, where we end up slicing the array in its entirety, creating a copy of our input array.
-    """
-    prev_freq = 0
 
-    start_index = -1
-    end_index = -1
+    TODO: I need to find a better solution to accomodate cases where all frequencies are the same.
+    """
+    # Just a hard-coded value for the first frequency
+    prev_freq = out[0][1] if len(out) != 0 else 0
+
+    start_index = 0
+    end_index = 0
     
     # T: O(n log n)
-    for i in range(len(out)):
+    for i in range(1, len(out)):
         curr_freq = out[i][1]
-
-        # Entering and exiting a same-frequency sequence
+        
+    
         if curr_freq != prev_freq:
+            end_index = i
             
-            # We do not sort in the iteration of the first element.
-            if prev_freq != 0:
-                out[start_index: end_index] = sorted(out[start_index: end_index])
+            out[start_index: end_index] = sorted(out[start_index: end_index])
 
             prev_freq = curr_freq
 
-            start_index = i
-            # We have +1 to be inclusive of the ending index. The +1 can be put when we sort.
-            end_index = start_index + 1
+            start_index = end_index
 
-        else:
-            end_index += 1
+        elif (i == len(out) - 1) and prev_freq == curr_freq:
+            end_index = i
+
+            out[start_index: end_index+1] = sorted(out[start_index: end_index+1])
 
     return out
 
@@ -170,7 +174,10 @@ if __name__ == '__main__':
     # fptr.write('\n')
 
     # fptr.close()
-    arr = [3, 3, 1, 2, 1]
+    arr = [3, 3, 1, 2, 1,2]
     uniques = get_unique_values_v2(arr)
-    # uniques = map_uniques_to_their_count(arr, uniques)
-    print(map_uniques_to_their_count(arr, uniques))
+    print(uniques)
+    out = associate_uniques_with_their_count(arr, uniques)
+    print(out)
+    out = sort_2d_arr_by_uniques_in_ascending_order(out)
+    print(out)
