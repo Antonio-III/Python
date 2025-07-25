@@ -4,7 +4,7 @@ This is a collection of code I've writen for the respective language. The conten
 
 Below is information about what the folders mean:
 
-  1. **OC** - Content that come from the mind.
+  1. **OC** - Content that came from the mind.
   
   2. **HackerRank** - My solutions to problems in [HackerRank](https://www.hackerrank.com/), though some can only be found through exclusive links. 
   
