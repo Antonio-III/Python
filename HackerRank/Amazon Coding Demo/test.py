@@ -1,2 +1,9 @@
-for i in range(1, 1):
-    print(i)
+def mod_list(l:list) -> list:
+    sorted(l)
+    l.append(2)
+    return []
+
+l = [2,3,1]
+mod_list(l)
+print(l)
+l.sort()

@@ -23,11 +23,11 @@ def groupSort(arr):
     
     uniques = get_unique_values_v2(arr) 
     
-    out = associate_uniques_with_their_count(arr, uniques)
+    out = associate_uniques_with_their_frequencies(arr, uniques)
     
-    out = sort_2d_arr_by_frequencies_in_descending_order(out)
+    out = sort_by_frequencies_in_descending_order(out)
     
-    out = sort_2d_arr_by_uniques_in_ascending_order(out)
+    out = sort_uniques_w_same_frequencies_in_ascending_order(out)
 
     return out
 
@@ -93,7 +93,7 @@ def get_unique_values_v3(arr: list[int]) -> list[int]:
             uniques.append(i)
     return uniques
 
-def associate_uniques_with_their_count(arr: list[int], uniques: list[int]) -> list[list[int]]:
+def associate_uniques_with_their_frequencies(arr: list[int], uniques: list[int]) -> list[list[int]]:
     """
     Returns a 2d array where each inner list contains `a unique element`, and its `count` in the original array. For instance, given an input of:
         arr = [3, 3, 1, 2, 1]
@@ -107,7 +107,7 @@ def associate_uniques_with_their_count(arr: list[int], uniques: list[int]) -> li
     """
     return [[e, arr.count(e)] for e in uniques]
 
-def sort_2d_arr_by_frequencies_in_descending_order(out: list[list[int]]) -> list[list[int]]:
+def sort_by_frequencies_in_descending_order(out: list[list[int]]) -> list[list[int]]:
     """
     T: O(nlogn) 
 
@@ -115,44 +115,47 @@ def sort_2d_arr_by_frequencies_in_descending_order(out: list[list[int]]) -> list
     """
     return sorted(out, key=lambda pair: pair[1], reverse=True)
     
-def sort_2d_arr_by_uniques_in_ascending_order(out: list[list[int]]) -> list[list[int]]:
+def sort_uniques_w_same_frequencies_in_ascending_order(out: list[list[int]]) -> list[list[int]]:
     """
-    Takes in a [number, frequency] array like `[[3, 2], [1, 2], [2, 1]]` and sorts the same-frequency lists in ascending order. In the input, `[3, 2] and [1, 2]` have the same frequency (2) and are not in ascending order (3 comes before 1, which is incorrect), so we take this slice and perform a sort operation on them.
+    Takes in an 2d array [number, frequency] like `[[3, 2], [1, 2], [2, 1]]` and sorts the same-frequency lists in ascending order. 
+    
+    In the input, `[3, 2] and [1, 2]` have the same frequency (2) and are not in ascending order (3 comes before 1, which is incorrect), so we take this slice and perform a sort operation on them.
     
     Returns `[[1, 2], [3, 2], [2, 1]]`.
 
-    The algorithm works by iterating through the indices of `out` and when a change of frequency has been found, we sort the corresponding indices accordingly. In the case of when we are at the last element, we perform a check if the frequencies match from what we are currently tracking, if they match, we perform a sort including the last element, if we do not, a sort is still performed but excluding the last element.
+    The solution iterates through the indices of `out` and when a change of frequency has been found, we sort the corresponding indices accordingly. The addition of a special element is to force a sort when the last element is encountered.
 
-    Time complexity: O(n log n). The sorting time complexity goes from O(n) — where all elements are unique — to O(n log n) — where all elements have the same frequency.
+    Time complexity: O(n+nlogn). 
+    
+        The sorting time complexity goes from O(n) — where all elements are unique (best case), we just iterate through the array with near O(1) sorting — to O(n+nlogn) — where all elements have the same frequency, and sorting n amount of elements is O(nlogn), on top of iterating through the array.
 
-    Space complexity: O(n), corresponds to the input array. Worst case is O(2n) at the last iteration if the array only had 1 frequency, where we end up slicing the array in its entirety, creating a copy of our input array.
-
-    TODO: I need to find a better solution to accomodate cases where all frequencies are the same.
+    Space complexity: O(1), since we aren't necessarily creating a new array, but processing a given array whose length is retained.
     """
-    # Just a hard-coded value for the first frequency
-    prev_freq = out[0][1] if len(out) != 0 else 0
+    # We will append a special list containing values that should not be possible. This forces a sort when we encounter the last element.
+    out.append([0, 0])
 
+    # Just a hard-coded value for the first frequency
+    prev_freq = out[0][1] if len(out) >= 1 else 0
+
+    
     start_index = 0
     end_index = 0
     
-    # T: O(n log n)
+    # T: O(n)
     for i in range(1, len(out)):
         curr_freq = out[i][1]
         
-    
         if curr_freq != prev_freq:
             end_index = i
             
+            # T: O(klogk), S: O(k) but 2k peak (both temp), k <= n
             out[start_index: end_index] = sorted(out[start_index: end_index])
 
             prev_freq = curr_freq
-
             start_index = end_index
 
-        elif (i == len(out) - 1) and prev_freq == curr_freq:
-            end_index = i
-
-            out[start_index: end_index+1] = sorted(out[start_index: end_index+1])
+    # Since we added an element, we have to remove it afterwards.
+    out.pop()
 
     return out
 
@@ -174,10 +177,17 @@ if __name__ == '__main__':
     # fptr.write('\n')
 
     # fptr.close()
-    arr = [3, 3, 1, 2, 1,2]
+    # Test input
+    arr = [3, 3, 1, 2, 1,2,3,5,6,8,5,6,8,9,9,6,8,9,4,2]
+
     uniques = get_unique_values_v2(arr)
     print(uniques)
-    out = associate_uniques_with_their_count(arr, uniques)
+
+    out = associate_uniques_with_their_frequencies(arr, uniques)
     print(out)
-    out = sort_2d_arr_by_uniques_in_ascending_order(out)
+
+    out = sort_by_frequencies_in_descending_order(out)
+    print(out)
+
+    out = sort_uniques_w_same_frequencies_in_ascending_order(out)
     print(out)
