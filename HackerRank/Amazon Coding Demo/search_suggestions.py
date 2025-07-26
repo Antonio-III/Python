@@ -42,23 +42,25 @@ def search_suggestions(repository: list[str], customer_query: str) -> list[list[
 
     Space complexity: O(4m+w)
     """
+    # n = len(repository)
+    # m = len(customer_query)
+    # w = len(word)
+
+    # T: nlogn, S: w
+    sorted_repository = sorted([word.lower() for word in repository])
+
+    # S: m * 3
     suggestions_past_1st_char = []
 
-    repository.sort()
-
-    
-    # T: m = len(customer_query)
-    for i in range(1, len(customer_query)):
+    # T: m
+    for i in range(2, len(customer_query)+1):
+        # S: m 
+        curr_query = customer_query[0:i].lower()
         
-        # S: m * 3
         curr_suggestions = []
-        # S: m
-        curr_query = customer_query[0:i+1].lower()
 
         # T: n
-        for word in repository:
-            # S: w = len(word)
-            word = word.lower()
+        for word in sorted_repository:
             if word.startswith(curr_query) and len(curr_suggestions) < 3:
                 curr_suggestions.append(word)
 
@@ -67,7 +69,7 @@ def search_suggestions(repository: list[str], customer_query: str) -> list[list[
     return suggestions_past_1st_char
 
 if __name__ == "__main__":
-    repository = ["abbS", "abc", "Abs", "bcs", "bdsa", "cdde", "rgb", "yjmm", "xxmm", "zeee"]
-    customer_query = "123"
+    repository = ["mobile", "mouse", "monitor", "moneypot", "monitor", "mousepad"]
+    customer_query = "mouse"
 
     print(search_suggestions(repository, customer_query))
