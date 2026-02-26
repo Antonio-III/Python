@@ -1,7 +1,7 @@
 """
 Docstring for OC.Problems.Math.Verify_Expression.01_prealgebra
 
-I wrote this script so I can verify my solutions to pre-algebraic equations having to do it mentally.
+I wrote this script so I can verify my solutions to pre-algebraic equations without having to do it mentally.
 """
 
 def main():
