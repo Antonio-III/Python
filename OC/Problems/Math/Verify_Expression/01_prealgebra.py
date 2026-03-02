@@ -6,24 +6,24 @@ I wrote this script so I can verify my solutions to pre-algebraic equations with
 
 def main():
     exp = input("Enter expression:\n")
-    var = input("Enter variable character:\n")
-    var_c = input("Enter found value:\n")
+    var_c = input("Enter variable character:\n")
+    val = input("Enter found value:\n")
 
-    new = rewrite(exp, var, var_c)
+    new = rewrite(exp, var_c, val)
 
     print(new)
     print(eval(new))
 
-def rewrite(exp: str, var: str, var_c: str) -> str:
+def rewrite(exp: str, var_c: str, val: str) -> str:
     """
     Rewrites a mathematical expression where the value of the variable is plugged in. 
     
     :param exp: The mathematical expression.
     :type exp: str
-    :param var: The letter representing the unknown value.
-    :type var: str
-    :param var_c: The value found after solving the equation.
+    :param var_c: The letter representing the unknown value.
     :type var_c: str
+    :param val: The value found after solving the equation.
+    :type val: str
     :return: A reformatted expression of the mathematical expression where the solution has been plugged in, to be passed to `eval()` function.
     :rtype: str
     """
@@ -49,6 +49,9 @@ def rewrite(exp: str, var: str, var_c: str) -> str:
     new = new.replace("=", "==")
     
     # Replace any instances of the variable with the found value.
-    new = new.replace("y", f"*({var})")    
+    new = new.replace(var_c, f"*({val})")    
 
     return new
+
+if __name__ == "__main__":
+    main()
