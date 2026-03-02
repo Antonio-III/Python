@@ -4,15 +4,20 @@ Docstring for OC.Problems.Math.Verify_Expression.01_prealgebra
 I wrote this script so I can verify my solutions to pre-algebraic equations without having to do it mentally.
 """
 
+# N digits after the decimal point.
+ROUND_TO = 3
+
 def main():
     exp = input("Enter expression:\n")
     var_c = input("Enter variable character:\n")
     val = input("Enter found value:\n")
 
     new = rewrite(exp, var_c, val)
+    print(f"Expression: {new}")
 
-    print(new)
-    print(eval(new))
+    
+    res = eval(new)
+    print(f"Result: {res}\nRounded {ROUND_TO} digits: {round(res, ROUND_TO)}")
 
 def rewrite(exp: str, var_c: str, val: str) -> str:
     """
@@ -27,6 +32,10 @@ def rewrite(exp: str, var_c: str, val: str) -> str:
     :return: A reformatted expression of the mathematical expression where the solution has been plugged in, to be passed to `eval()` function.
     :rtype: str
     """
+
+    if (not var_c) or (not val):
+        return exp
+    
     # Make an empty string.
     new = ""
     
@@ -42,16 +51,20 @@ def rewrite(exp: str, var_c: str, val: str) -> str:
             if i == 0 or not (exp[i-1].isnumeric()):
                 new += "1"  
         
+        if char == "=":
+            if (not exp[i-1] == "<") and (not exp[i-1] == ">"):
+                new += "="
+    
         # Copy the characer to new string.
         new += char
     
-    # In python, equality symbol is "==" as opposed to "=".
-    new = new.replace("=", "==")
     
     # Replace any instances of the variable with the found value.
     new = new.replace(var_c, f"*({val})")    
 
     return new
+
+
 
 if __name__ == "__main__":
     main()
