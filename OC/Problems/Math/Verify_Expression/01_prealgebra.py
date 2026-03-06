@@ -20,27 +20,27 @@ def main():
     print(f"Result: {res}\nRounded {ROUND_TO} digits: {round(res, ROUND_TO)}")
 
 
-def rewrite(exp: str, var_c: str, val: str) -> str:
+def rewrite(exp: str, var: str, val: str) -> str:
     """Rewrites a mathematical expression where the value of the variable is plugged in.
 
     Args:
         exp (str): The mathematical expression.
-        var_c (str): The letter representing the unknown value.
+        var (str): The letter representing the unknown value.
         val (str): The value found after solving the equation.
 
     Returns:
         str: A reformatted expression of the mathematical expression where the solution has been plugged in. It's up to you to put this into the eval function.
     """
 
-    if (not var_c) or (not val):
+    if (not var) or (not val):
         return exp
     
     new_eq = rewrite_eq(exp)
-    new_var_c = rewrite_var_c(new_eq, var_c)
+    new_var = rewrite_var(new_eq, var)
     
-    plugged = new_var_c.replace(var_c, f"({val})")
+    new_exp = new_var.replace(var, f"({val})")
 
-    return plugged
+    return new_exp
 
 def rewrite_eq(exp: str) -> str:
     """Replaces an equation symbol with double equal signs. Does not replace the equal symbol if it's part of an inequality.
@@ -63,28 +63,28 @@ def rewrite_eq(exp: str) -> str:
     return new
 
 
-def rewrite_var_c(exp: str, var_c: str) -> str:
+def rewrite_var(exp: str, var: str) -> str:
     """
     Rewrites the expression but explicitly adding a `1*` to any lone variable term. Suppports variable terms longer than a single character.
 
     Args:
         exp (str): The mathematical expression.
-        var_c (str): The letter representing the unknown value.
+        var (str): The letter representing the unknown value.
 
     Returns:
         str: A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
     """
     prev_var = 0
-    next_var = exp.find(var_c)
+    next_var = exp.find(var)
 
-    var_count = exp.count(var_c)
+    var_count = exp.count(var)
 
     new = ""
 
     # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
 
     for _ in range(var_count):
-        next_var = exp.find(var_c, prev_var)
+        next_var = exp.find(var, prev_var)
 
         
 
@@ -92,7 +92,7 @@ def rewrite_var_c(exp: str, var_c: str) -> str:
         new += exp[prev_var: next_var]
 
         if (next_var == 0) or (not exp[next_var-1].isnumeric()):
-            new += f"1*"
+            new += "1*"
         
         
         prev_var = next_var
@@ -100,8 +100,6 @@ def rewrite_var_c(exp: str, var_c: str) -> str:
     new += exp[prev_var: len(exp)]
 
     return new
-
-
 
 if __name__ == "__main__":
     main()
