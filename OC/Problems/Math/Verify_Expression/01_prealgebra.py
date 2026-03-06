@@ -86,14 +86,11 @@ def rewrite_var(exp: str, var: str) -> str:
     for _ in range(var_count):
         next_var = exp.find(var, prev_var)
 
-        
-
         # Copy the string until it reaches where the variable is or until the end of the string.
         new += exp[prev_var: next_var]
 
         if (next_var == 0) or (not exp[next_var-1].isnumeric()):
             new += "1*"
-        
         
         prev_var = next_var
 
