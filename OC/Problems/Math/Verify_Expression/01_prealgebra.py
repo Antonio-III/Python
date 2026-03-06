@@ -19,43 +19,89 @@ def main():
     res = eval(new)
     print(f"Result: {res}\nRounded {ROUND_TO} digits: {round(res, ROUND_TO)}")
 
+
 def rewrite(exp: str, var_c: str, val: str) -> str:
-    """
-    Rewrites a mathematical expression where the value of the variable is plugged in. 
-    
-    :param exp: The mathematical expression.
-    :type exp: str
-    :param var_c: The letter representing the unknown value.
-    :type var_c: str
-    :param val: The value found after solving the equation.
-    :type val: str
-    :return: A reformatted expression of the mathematical expression where the solution has been plugged in, to be passed to `eval()` function.
-    :rtype: str
+    """Rewrites a mathematical expression where the value of the variable is plugged in.
+
+    Args:
+        exp (str): The mathematical expression.
+        var_c (str): The letter representing the unknown value.
+        val (str): The value found after solving the equation.
+
+    Returns:
+        str: A reformatted expression of the mathematical expression where the solution has been plugged in. It's up to you to put this into the eval function.
     """
 
     if (not var_c) or (not val):
         return exp
     
-    new = ""
+    new_eq = rewrite_eq(exp)
+    new_var_c = rewrite_var_c(new_eq, var_c)
     
+    plugged = new_var_c.replace(var_c, f"({val})")
+
+    return plugged
+
+def rewrite_eq(exp: str) -> str:
+    """Replaces an equation symbol with double equal signs. Does not replace the equal symbol if it's part of an inequality.
+
+    Args:
+        exp (str): The mathematical expression.
+
+    Returns:
+        str: A version of the expression where any `=` is replaced with `==`.
+    """
+    new = ""
+
     for i, char in enumerate(exp):
-        if char == var_c:
-            # There are 2 places where a coeff-less variable might appear: in the beginning or in the middle of the expression:
-            # If it's in the beginning, we add a 1 to variable because if it had a coeff, it would be in the middle of the expression.
-            # If it's in the middle, we check for the previous char to see if the variable is indeed coeff-less.
-            if i == 0 or not (exp[i-1].isnumeric()):
-                new += "1"  
-        
         # For the script to work for equations and inequalities, we only add an extra equal symbol if we are looking at a single equal sign.
         if char == "=":
             if (exp[i-1] != "<") and (exp[i-1] != ">"):
                 new += "="
     
         new += char
-    
-    new = new.replace(var_c, f"*({val})")    
+    return new
+
+
+def rewrite_var_c(exp: str, var_c: str) -> str:
+    """
+    Rewrites the expression but explicitly adding a `1*` to any lone variable term. Suppports variable terms longer than a single character.
+
+    Args:
+        exp (str): The mathematical expression.
+        var_c (str): The letter representing the unknown value.
+
+    Returns:
+        str: A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
+    """
+    prev_var = 0
+    next_var = exp.find(var_c)
+
+    var_count = exp.count(var_c)
+
+    new = ""
+
+    # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
+
+    for _ in range(var_count):
+        next_var = exp.find(var_c, prev_var)
+
+        
+
+        # Copy the string until it reaches where the variable is or until the end of the string.
+        new += exp[prev_var: next_var]
+
+        if (next_var == 0) or (not exp[next_var-1].isnumeric()):
+            new += f"1*"
+        
+        
+        prev_var = next_var
+
+    new += exp[prev_var: len(exp)]
 
     return new
+
+
 
 if __name__ == "__main__":
     main()
