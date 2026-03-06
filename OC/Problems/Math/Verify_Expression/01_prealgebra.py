@@ -36,35 +36,26 @@ def rewrite(exp: str, var_c: str, val: str) -> str:
     if (not var_c) or (not val):
         return exp
     
-    # Make an empty string.
     new = ""
     
-    # Loop through original string.
     for i, char in enumerate(exp):
-        
-        # When encountering variable term with no coeff, add a 1 before copying the term.
         if char == var_c:
-            
             # There are 2 places where a coeff-less variable might appear: in the beginning or in the middle of the expression:
             # If it's in the beginning, we add a 1 to variable because if it had a coeff, it would be in the middle of the expression.
             # If it's in the middle, we check for the previous char to see if the variable is indeed coeff-less.
             if i == 0 or not (exp[i-1].isnumeric()):
                 new += "1"  
         
+        # For the script to work for equations and inequalities, we only add an extra equal symbol if we are looking at a single equal sign.
         if char == "=":
-            if (not exp[i-1] == "<") and (not exp[i-1] == ">"):
+            if (exp[i-1] != "<") and (exp[i-1] != ">"):
                 new += "="
     
-        # Copy the characer to new string.
         new += char
     
-    
-    # Replace any instances of the variable with the found value.
     new = new.replace(var_c, f"*({val})")    
 
     return new
-
-
 
 if __name__ == "__main__":
     main()
