@@ -35,14 +35,24 @@ def rewrite(exp: str, var: str, val: str) -> str:
     if (not var) or (not val):
         return exp
     
-    new_eq = rewrite_eq(exp)
-    new_var = rewrite_var(new_eq, var)
-    
-    new_exp = new_var.replace(var, f"({val})")
+    # Remove whitespaces from expression.
+    exp = exp.replace(" ", "")
 
-    return new_exp
+    # Replace lone equal signs with double equal signs.
+    new = __rewrite_eq(exp)
 
-def rewrite_eq(exp: str) -> str:
+    # Rewrite any lone variable (like x) to explicit multiplication (like 1*x).
+    new = __rewrite_var(exp, var)
+
+    # If multiplication is represented with parentheses, rewrite the expression [like 2(5y)] to explicit multiplication [like 2*5*1]. 
+    new = __rewrite_par(new)
+
+    # Replace variable terms with the found term (if possible).
+    new = new.replace(var, f"({val})")
+
+    return new
+
+def __rewrite_eq(exp: str) -> str:
     """Replaces an equation symbol with double equal signs. Does not replace the equal symbol if it's part of an inequality.
 
     Args:
@@ -51,21 +61,32 @@ def rewrite_eq(exp: str) -> str:
     Returns:
         str: A version of the expression where any `=` is replaced with `==`.
     """
-    new = ""
 
-    for i, char in enumerate(exp):
-        # For the script to work for equations and inequalities, we only add an extra equal symbol if we are looking at a single equal sign.
-        if char == "=":
-            if (exp[i-1] != "<") and (exp[i-1] != ">"):
-                new += "="
+    new = ""
     
-        new += char
+    i = 0
+    eq_count = exp.count("=")
+
+    for _ in range(eq_count):
+        
+        eq_i = exp.find("=", i)
+
+        # For the script to work for equations and inequalities, we only add an extra equal symbol if we are looking at a single equal sign.
+        new += exp[i: eq_i]
+        
+        new += "==" if (exp[i-1] != "<") and (exp[i-1] != ">") else "="
+
+        i = eq_i+1
+
+    new += __remaining_terms(exp, i)
     return new
 
 
-def rewrite_var(exp: str, var: str) -> str:
+def __rewrite_var(exp: str, var: str) -> str:
     """
-    Rewrites the expression but explicitly adding a `1*` to any lone variable term. Suppports variable terms longer than a single character.
+    Rewrites the expression but explicitly adding a `1*` to any lone variable term.
+
+    Suppports variable terms longer than a single character.
 
     Args:
         exp (str): The mathematical expression.
@@ -75,7 +96,7 @@ def rewrite_var(exp: str, var: str) -> str:
         str: A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
     """
     prev_var = 0
-    next_var = exp.find(var)
+    next_var = 0
 
     var_count = exp.count(var)
 
@@ -97,6 +118,85 @@ def rewrite_var(exp: str, var: str) -> str:
     new += exp[prev_var: len(exp)]
 
     return new
+
+def __rewrite_par(exp: str) -> str:
+    """Rewrites parentheses in the expression to represent multiplication.
+
+    This function should only be ran AFTER converting all variables to numeric terms.
+
+    Args:
+        exp (str): The mathematical expression.
+
+    Raises:
+        SyntaxError: There is an uneven count of open and closed parentheses.
+
+    Returns:
+        str: The mathematical expression with all parentheses rewritten as python multiplication.
+    """
+    new = ""
+
+    open_par = exp.count("(")
+    closed_par = exp.count(")")
+
+    if (open_par != closed_par):
+        raise SyntaxError(f"Invalid parenthesis count: {open_par} open: {closed_par} closed")
+
+    i = 0
+
+    open_par_i = exp.find("(")
+    close_par_i = exp.find(")")
+    
+    for _ in range(open_par):
+        new += exp[i: open_par_i]
+
+        # Append "1" when encountering open parenthesis.
+        if (open_par_i == 0) or not (exp[open_par_i-1].isnumeric()):
+            new += "1"
+
+        # Append term between parentheses with multiplication signs on both ends of the term.
+        new += f"*{__n_in_par(exp, open_par_i, close_par_i)}*"
+
+        # Append "1" when encountering closed parenthesis.
+        if (close_par_i+1 == len(exp)) or not (exp[close_par_i+1].isnumeric()):
+            new += "1"
+    
+        i = close_par_i+1
+
+        open_par_i = exp.find("(", open_par_i+1)
+        close_par_i = exp.find(")", close_par_i+1)
+
+    # Append remaining terms after dealing with all the parentheses.
+    new += __remaining_terms(exp, i)
+
+    return new
+
+def __n_in_par(exp: str, open_par_i: int, close_par_i: int) -> str:
+    """Returns the expression between the opening and closing parenthesis.
+
+    Args:
+        exp (str): The mathematical expression.
+        open_par_i (int): Index of the opening parenthesis.
+        close_par_i (int): Index of the closing parenthesis.
+
+    Returns:
+        str: The expression between the opening and closing parenthesis.
+    """
+    return exp[open_par_i+1 : close_par_i]
+
+def __remaining_terms(exp: str, start: int) -> str:
+    """Returns the remaining expression from the starting index until the end of the expression.
+
+    Used after terminating a loop.
+
+    Args:
+        exp (str): The mathematical expression.
+        start (int): Index representing the start of the remaining terms.
+
+    Returns:
+        str: The remaining expression from the starting index until the end of the expression.
+    """
+    return exp[start: len(exp)]
+
 
 if __name__ == "__main__":
     main()
