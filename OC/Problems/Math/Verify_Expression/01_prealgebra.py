@@ -1,7 +1,7 @@
 """
 Docstring for OC.Problems.Math.Verify_Expression.01_prealgebra
 
-I wrote this script so I can verify my solutions to pre-algebra expression.
+I wrote this script so I can verify my solutions to pre-algebra expressions.
 """
 
 # N digits after the decimal point.
@@ -76,7 +76,7 @@ def __rewrite_eq(exp: str) -> str:
         new += exp[i: eq_i]
 
         # For the script to work for equations and inequalities, we only add an extra equal symbol if we are looking at a single equal sign.
-        new += "==" if (exp[i-1] != "<") and (exp[i-1] != ">") else "="
+        new += "==" if (exp[eq_i-1] != "<") and (exp[eq_i-1] != ">") else "="
 
         i = eq_i+1
 
