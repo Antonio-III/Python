@@ -42,7 +42,7 @@ def rewrite(exp: str, var: str, val: str) -> str:
     new = __rewrite_eq(exp)
 
     # Rewrite any lone variable (like x) to explicit multiplication (like 1*x).
-    new = __rewrite_var(exp, var)
+    new = __rewrite_var(new, var)
 
     # If multiplication is represented with parentheses, rewrite the expression [like 2(5y)] to explicit multiplication [like 2*5*1]. 
     new = __rewrite_par(new)
