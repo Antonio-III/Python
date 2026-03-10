@@ -97,30 +97,32 @@ def __rewrite_var(exp: str, var: str) -> str:
     Returns:
         str: A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
     """
-    prev_var = 0
-    next_var = 0
+    new = ""
+
+    i = 0
 
     var_count = exp.count(var)
-
-    new = ""
 
     # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
 
     for _ in range(var_count):
-        next_var = exp.find(var, prev_var)
+        next_var = exp.find(var, i)
 
         # Copy the string until it reaches where the variable is or until the end of the string.
-        new += exp[prev_var: next_var]
+        new += exp[i: next_var]
 
         if (next_var == 0) or (not exp[next_var-1].isnumeric()):
-            new += "1*"
+            new += "1"
         
-        prev_var = next_var
+        new += "*"
 
-    new += exp[prev_var: len(exp)]
+        i = next_var+1
+
+    new += __remaining_terms(exp, i)
 
     return new
 
+# TODO: Support nested parentheses expressions.
 def __rewrite_par(exp: str) -> str:
     """Rewrites parentheses in the expression to represent multiplication.
 
@@ -155,8 +157,8 @@ def __rewrite_par(exp: str) -> str:
         if (open_par_i == 0) or not (exp[open_par_i-1].isnumeric()):
             new += "1"
 
-        # Append term between parentheses with multiplication signs on both ends of the term.
-        new += f"*{__n_in_par(exp, open_par_i, close_par_i)}*"
+        # Append term between parentheses with multiplication signs on both ends of the term. Parentheses are kept.
+        new += f"*({__n_in_par(exp, open_par_i, close_par_i)})*"
 
         # Append "1" when encountering closed parenthesis.
         if (close_par_i+1 == len(exp)) or not (exp[close_par_i+1].isnumeric()):
@@ -199,6 +201,7 @@ def __remaining_terms(exp: str, start: int) -> str:
     """
     return exp[start: len(exp)]
 
+# TODO: Add support for cataract expressions (as exponentiation).
 
 if __name__ == "__main__":
     main()
