@@ -106,17 +106,17 @@ def __rewrite_var(exp: str, var: str) -> str:
     # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
 
     for _ in range(var_count):
-        next_var = exp.find(var, i)
+        var_i = exp.find(var, i)
 
         # Copy the string until it reaches where the variable is or until the end of the string.
-        new += exp[i: next_var]
+        new += exp[i: var_i]
 
-        if (next_var == 0) or (not exp[next_var-1].isnumeric()):
+        if (var_i == 0) or (not exp[var_i-1].isnumeric()):
             new += "1"
         
-        new += "*"
+        new += f"*{var}"  
 
-        i = next_var+1
+        i = var_i+1
 
     new += __remaining_terms(exp, i)
 
