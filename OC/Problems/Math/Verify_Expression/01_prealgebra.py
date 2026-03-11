@@ -5,7 +5,7 @@ I wrote this script so I can verify my solutions to pre-algebra expressions.
 """
 
 # N digits after the decimal point.
-ROUND_TO = 3
+ROUND_TO = 3+1
 
 def main():
     exp = input("Enter expression:\n")
@@ -32,9 +32,6 @@ def rewrite(exp: str, var: str, val: str) -> str:
         str: A reformatted expression of the mathematical expression where the solution has been plugged in. It's up to you to put this into the eval function.
     """
 
-    if (not var) or (not val):
-        return exp
-    
     # Remove whitespaces from expression.
     exp = exp.replace(" ", "")
 
@@ -48,7 +45,8 @@ def rewrite(exp: str, var: str, val: str) -> str:
     new = __rewrite_par(new)
 
     # Replace variable terms with the found term (if possible).
-    new = new.replace(var, f"({val})")
+    if val:
+        new = new.replace(var, f"({val})")
 
     return new
 
@@ -97,6 +95,10 @@ def __rewrite_var(exp: str, var: str) -> str:
     Returns:
         str: A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
     """
+
+    if not var:
+        return exp
+    
     new = ""
 
     i = 0
@@ -201,7 +203,9 @@ def __remaining_terms(exp: str, start: int) -> str:
     """
     return exp[start: len(exp)]
 
-# TODO: Add support for cataract expressions (as exponentiation).
+# TODO: Add support for caret expressions as exponentiation.
+# TODO: Add support for variable operations without knowing its value.
+# Ex: 1x + 2x = 3x, x^2 * x^3 = x^5.
 
 if __name__ == "__main__":
     main()
