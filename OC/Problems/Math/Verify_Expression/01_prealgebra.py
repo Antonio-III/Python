@@ -41,7 +41,7 @@ def rewrite(exp: str, var: str, val: str) -> str:
     # Rewrite any lone variable (like x) to explicit multiplication (like 1*x).
     new = __rewrite_var(new, var)
 
-    # If multiplication is represented with parentheses, rewrite the expression [like 2(5y)] to explicit multiplication [like 2*5*1]. 
+    # If multiplication is represented with parentheses, rewrite the expression [like 2(5)] to explicit multiplication [like 2*(5)*1]. 
     new = __rewrite_par(new)
 
     # Replace variable terms with the found term (if possible).
@@ -59,13 +59,16 @@ def __rewrite_eq(exp: str) -> str:
     Returns:
         str: A version of the expression where any `=` is replaced with `==`.
     """
+    eq_count = exp.count("=")
 
+    if not eq_count:
+        return exp
+    
     new = ""
     
     # TODO: Add a step to verify if equality/inequality symbols are valid.
 
     i = 0
-    eq_count = exp.count("=")
 
     for _ in range(eq_count):
         
@@ -151,7 +154,8 @@ def __rewrite_par(exp: str) -> str:
 
     open_par_i = exp.find("(")
     close_par_i = exp.find(")")
-    
+
+    # O(n^2). Need to be reduced to O(n) time.
     for _ in range(open_par):
         new += exp[i: open_par_i]
 
