@@ -17,7 +17,7 @@ def main():
     # For debugging
     print(f"Expression: {new}")
     
-    terms, signs = __get_terms_signs(new)
+    terms, signs = __get_exps_signs(new)
     
     if not signs:
         res = __eval_exp_no_sign(new)
@@ -30,15 +30,15 @@ def main():
         print(f"Rounded {ROUND_TO} digits: {round(res, ROUND_TO)}")
 
 def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
-    """Rewrites a mathematical expression where the value of the variable is plugged in.
+    """Rewrites the expression to be appropriate for passing into `eval`.
 
     Args:
         exp: The mathematical expression.
-        var: The letter representing the unknown value.
-        val: The value found after solving the equation.
+        var: The letter/s representing the unknown value/s.
+        val: The value/s to be plugged into the variable.
 
     Returns:
-        A new expression where the solution has been plugged in. 
+        A cleaned expression where the solution has been plugged in. 
 
         The new expression is passable to the `eval` function for evaluation.
     """
@@ -155,8 +155,9 @@ def __rewrite_par(exp: str) -> str:
     Returns:
         The mathematical expression with all parentheses rewritten as python multiplication.
     """
-    exp, exp_l = __pad_par(exp)
+    exp = __pad_par(exp)
 
+    exp_l = len(exp)
     new = ""
 
     for i in range(exp_l):
@@ -199,7 +200,7 @@ def __rewrite_par(exp: str) -> str:
 
     return new
 
-def __pad_par(exp: str) -> tuple[str, int]:
+def __pad_par(exp: str) -> str:
     """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. 
 
     This allows evaluation support even if the user passes an expression with partial parentheses.
@@ -208,9 +209,7 @@ def __pad_par(exp: str) -> tuple[str, int]:
         exp: The mathematical expression.
 
     Returns:
-        A tuple containing the rewritten form of the mathematical expression where the parentheses are have been padded to be equal, and the length of the new expression. 
-
-        The length value is for optimization for the current use of this function.
+        A tuple containing the rewritten form of the mathematical expression where the parentheses are have been padded to be equal.
     """
     op = 0
     cp = 0
@@ -253,15 +252,14 @@ def __remaining_terms(exp: str, start: int) -> str:
     """
     return exp[start: len(exp)]
 
-# Change this function to get EVERY term between signs.
-def __get_terms_signs(exp: str) -> tuple[list[str], list[str]]:
-    """Returns the terms between the signs, and the signs.
+def __get_exps_signs(exp: str) -> tuple[list[str], list[str]]:
+    """Returns the expressions between the equality/inequality symbols, and the said symbols, found in the original expression.
 
     Args:
         exp: The mathematical expression.
 
     Returns:
-        The list of terms and signs found in the expression.
+        A list of expressions and signs found in the original expression.
     """
     signs = []
     terms = []
@@ -282,7 +280,7 @@ def __get_terms_signs(exp: str) -> tuple[list[str], list[str]]:
             sign = ""
             term = ""
 
-        if i+1 == exp_l:
+        if i < exp_l:
             terms.append(term)
 
     return terms, signs
