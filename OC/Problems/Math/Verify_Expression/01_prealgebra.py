@@ -298,7 +298,7 @@ def __eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
         The result of the evaluation.
     """
 
-    eval_terms = [eval(t) for t in terms]
+    eval_terms = [f"{eval(t)}" for t in terms]
 
     for i in range(len(terms)):
         print(f"Term {i+1}: {eval_terms[i]}")
