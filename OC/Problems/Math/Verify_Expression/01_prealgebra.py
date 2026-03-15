@@ -209,13 +209,13 @@ def __pad_par(exp: str) -> tuple[str, int]:
         l += 1
 
     # Pad the complementing parenthesis to the new expression.
+    diff = abs(op - cp)
     if (op < cp):
-        diff = cp - op
         new = f"{'(' * diff}{new}"
     elif (op > cp):
-        diff = cp - op
         new = f"{new}{')' * diff}"
-    
+
+    l += diff
     return new, l
 
 
