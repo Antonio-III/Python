@@ -67,7 +67,7 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     return new
 
 def __rewrite_eq(exp: str) -> str:
-    """Replaces an equation symbol with double equal signs. Does not replace the equal symbol if it's part of an inequality.
+    """Replaces single equation symbols with double-equal signs. Does not replace the equal symbol if it's part of an inequality or if the equality is already double-signed.
 
     Args:
         exp: The mathematical expression.
@@ -75,29 +75,16 @@ def __rewrite_eq(exp: str) -> str:
     Returns:
         A new expression where every equality is replaced with a double-equal sign.
     """
-    eq_count = exp.count("=")
-
-    if not eq_count:
-        return exp
-    
     new = ""
-    
-    # TODO: Add a step to verify if equality/inequality symbols are valid.
 
-    i = 0
+    exp_l = len(exp)
 
-    for _ in range(eq_count):
-        
-        eq_i = exp.find("=", i)
+    for i in range(exp_l):
+        if (exp[i] == "=") and (i > 0) and (i+1 < exp_l):
+            if (exp[i+1] != "=") and (exp[i-1] != "=") and (exp[i-1] != "<") and (exp[i-1] != ">"):
+                new += "="
+        new += exp[i]
 
-        new += exp[i: eq_i]
-
-        # For the script to work for equations and inequalities, we only add an extra equal symbol if we are looking at a single equal sign.
-        new += "==" if (exp[eq_i-1] != "<") and (exp[eq_i-1] != ">") else "="
-
-        i = eq_i+1
-
-    new += exp[i: len(exp)]
     return new
 
 def __rewrite_var(exp: str, vars: list[str]) -> str:
@@ -282,7 +269,6 @@ def __get_exps_signs(exp: str) -> tuple[list[str], list[str]]:
         if len(sign) == 2:
             signs.append(sign)
             sign = ""
-
 
     return terms, signs
 
