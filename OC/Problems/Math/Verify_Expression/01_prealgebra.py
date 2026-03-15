@@ -42,15 +42,18 @@ def rewrite(exp: str, var: str, val: str) -> str:
     """
 
     # Remove whitespaces from expression.
-    exp = exp.replace(" ", "")
+    new = exp.replace(" ", "")
 
     # Replace lone equal signs with double equal signs.
-    new = __rewrite_eq(exp)
+    new = __rewrite_eq(new)
 
-    # Rewrite any lone variable (like x) to explicit multiplication (like 1*x).
+    # Rewrite any lone variable like `x` to explicit multiplication like `1*x`.
     new = __rewrite_var(new, var)
 
-    # If multiplication is represented with parentheses, rewrite the expression [like 2(5)] to explicit multiplication [like 2*(5)*1]. 
+    # Replace caret characters with double-star signs (exponentiation).
+    new = __rewrite_expo(new)
+
+    # Rewrite the expression like `2(5)` to explicit multiplication like `2*(5)*1`. 
     new = __rewrite_par(new)
 
     # Replace variable terms with the found term (if possible).
@@ -139,7 +142,7 @@ def __rewrite_var(exp: str, var: str) -> str:
 def __rewrite_par(exp: str) -> str:
     """Rewrites parentheses in the expression to represent multiplication.
 
-    This function should only be ran AFTER converting all variables to numeric terms.
+    This function should only be ran AFTER converting all variables to include their coefficient.
 
     Args:
         exp (str): The mathematical expression.
@@ -158,10 +161,19 @@ def __rewrite_par(exp: str) -> str:
         if (exp[i] == "("):
             # Add "1" before an opening parenthesis if:
             #   1. The opening parenthesis is at the start.
+            if (i == 0):
+                new += "1"
+            
+            # This algorithm should not interfere with parentheses meant for exponentiation.
+            elif (exp[i-1] == "^") or ((i > 1) and exp[i-2: i] == "**"):
+                new += exp[i]
+                continue
+
+            # Add "1" before an opening parenthesis if:
             #   2. The previous character is a negative sign.
             #   3. The previous character is NOT a number. 
             #       For expressions like 3+(2) = 3+1*(2) = 5 and -(1) = -1*(1) = -1.
-            if (i == 0) or exp[i-1] == "-" or not (exp[i-1].isnumeric()): 
+            elif exp[i-1] == "-" or not (exp[i-1].isnumeric()): 
                 new += "1"
 
             # Add a multiplication sign before every opening parenthesis.
@@ -179,12 +191,13 @@ def __rewrite_par(exp: str) -> str:
 
         # Add a multiplication sign if:
         #   1. We are in the middle of the expression, and the next character is a number.
+        #   1.1 This also handles parentheses belong to exponents, making 2**(3)3 = 2**(3)*3
         if (i+1 < exp_l) and (exp[i] == ")") and (exp[i+1].isnumeric()):
             new += "*"
 
     return new
 
-# This returns an int for optimization.
+# This also returns the new length of the expression (for optimization).
 def __pad_par(exp: str) -> tuple[str, int]:
     """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. This allows evaluation support even if the user passes an expression with partial parentheses.
 
@@ -208,14 +221,16 @@ def __pad_par(exp: str) -> tuple[str, int]:
         new += c
         l += 1
 
-    # Pad the complementing parenthesis to the new expression.
     diff = abs(op - cp)
+
+    # Pad the complementing parenthesis to the new expression.
     if (op < cp):
         new = f"{'(' * diff}{new}"
     elif (op > cp):
         new = f"{new}{')' * diff}"
 
     l += diff
+
     return new, l
 
 
@@ -276,9 +291,20 @@ def __eval_no_sign(exp: str) -> int | float | bool:
     res = eval(exp)
     return res
 
-# TODO: Add support for caret expressions as exponentiation.
-# TODO: Add support for variable operations without knowing its value.
+def __rewrite_expo(exp: str) -> str:
+    """Rewrite caret characters in the expression as exponentitation.
+
+    Args:
+        exp (str): The mathematical expression.
+
+    Returns:
+        str: New expression where all caret characters are replaced with a double-star sign.
+    """
+    new = exp.replace("^", "**")
+    return new
+# TODO: Add support for simplfiying variable terms (and exponents).
 # Ex: 1x + 2x = 3x, x^2 * x^3 = x^5.
+
 
 if __name__ == "__main__":
     main()
