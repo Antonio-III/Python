@@ -155,7 +155,7 @@ def __rewrite_par(exp: str) -> str:
     Returns:
         The mathematical expression with all parentheses rewritten as python multiplication.
     """
-    exp, exp_l = __pad_par_v2(exp)
+    exp, exp_l = __pad_par(exp)
 
     new = ""
 
@@ -199,7 +199,6 @@ def __rewrite_par(exp: str) -> str:
 
     return new
 
-# This also returns the new length of the expression (for optimization).
 def __pad_par(exp: str) -> tuple[str, int]:
     """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. 
 
@@ -215,52 +214,11 @@ def __pad_par(exp: str) -> tuple[str, int]:
     """
     op = 0
     cp = 0
-    l = 0
-    new = ""
-
-    # Count the opening and closing parenthesis, as well as constructing the new expression, and count its length.
-    for c in exp:
-        if (c == "("):
-            op += 1
-        elif (c == ")"):
-            cp += 1
-        new += c
-        l += 1
-
-    diff = abs(op - cp)
-
-    # Pad the complementing parenthesis to the new expression.
-    if (op < cp):
-        new = f"{'(' * diff}{new}"
-    elif (op > cp):
-        new = f"{new}{')' * diff}"
-
-    l += diff
-
-    return new, l
-
-def __pad_par_v2(exp: str) -> tuple[str, int]:
-    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. 
-
-    This allows evaluation support even if the user passes an expression with partial parentheses.
-
-    Args:
-        exp: The mathematical expression.
-
-    Returns:
-        A tuple containing the rewritten form of the mathematical expression where the parentheses are have been padded to be equal, and the length of the new expression. 
-
-        The length value is for optimization for the current use of this function.
-    """
-    op = 0
-    cp = 0
-
-    exp_l = len(exp)
-    new_l = 0
     new = ""
     stack = []
+
     # Count the opening and closing parenthesis, as well as constructing the new expression, and count its length.
-    for i in range(exp_l):
+    for i in range(len(exp)):
         if (exp[i] == "("):
             stack.append(exp[i])
             op += 1
@@ -274,15 +232,12 @@ def __pad_par_v2(exp: str) -> tuple[str, int]:
                 cp += 1
 
         new += exp[i]
-        new_l += 1
         
     new = f"{'(' * cp}{new}"
-    new_l += cp
 
     new = f"{new}{')' * op}"
-    new_l += op
 
-    return new, new_l
+    return new
 
 def __remaining_terms(exp: str, start: int) -> str:
     """Returns the remaining expression from the starting index until the end of the expression.
