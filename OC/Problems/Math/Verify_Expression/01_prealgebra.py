@@ -9,8 +9,8 @@ ROUND_TO = 3+1
 
 def main():
     exp = input("Enter expression:\n")
-    var_c = input("Enter variable character/s:\n").strip().split(" ")
-    val = input("Enter found value/s:\n").strip().split(" ")
+    var_c = input("Enter variable character/s:\n").split()
+    val = input("Enter found value/s:\n").split()
 
     new = rewrite(exp, var_c, val)
 
@@ -155,7 +155,7 @@ def __rewrite_par(exp: str) -> str:
     Returns:
         The mathematical expression with all parentheses rewritten as python multiplication.
     """
-    exp, exp_l = __pad_par(exp)
+    exp, exp_l = __pad_par_v2(exp)
 
     new = ""
 
@@ -167,18 +167,18 @@ def __rewrite_par(exp: str) -> str:
                 new += "1"
             
             # This algorithm should not interfere with parentheses meant for exponentiation.
-            elif (exp[i-1] == "^") or ((i > 1) and exp[i-2: i] == "**"):
+            elif ((i > 1) and exp[i-2: i] == "**") or (exp[i-1] == "^"):
                 new += exp[i]
                 continue
 
             # Add "1" before an opening parenthesis if: 
-            #   2. The previous character is a negative sign.
-            #   3. The previous character is NOT a number. 
+            #   2. The previous character is a negative sign. OR
+            #   3. The previous character is neither a number or a closing parenthesis. 
             #       For expressions like 3+(2) = 3+1*(2) = 5 and -(1) = -1*(1) = -1.
-            elif exp[i-1] == "-" or not (exp[i-1].isnumeric()): 
+            elif exp[i-1] == "-" or (not (exp[i-1].isnumeric()) and exp[i-1] != ")"): 
                 new += "1"
 
-            # Add a multiplication sign before every opening parenthesis.
+            # Add a multiplication sign before the opening parenthesis.
             new += "*"
 
         # Add the current character to the new expression.
@@ -192,8 +192,8 @@ def __rewrite_par(exp: str) -> str:
                 new += "1"
 
         # Add a multiplication sign if:
-        #   1. We are in the middle of the expression, and the next character is a number.
-        #   1.1 This also handles parentheses belong to exponents, making 2**(3)3 = 2**(3)*3
+        #   1. We are a closing parenthesis in the middle of the expression, and the next character is a number or an opening parenthesis.
+        #   1.1 This also handles parentheses belonging to exponents, making 2**(3)3 = 2**(3)*3
         if (i+1 < exp_l) and (exp[i] == ")") and (exp[i+1].isnumeric()):
             new += "*"
 
@@ -239,6 +239,50 @@ def __pad_par(exp: str) -> tuple[str, int]:
 
     return new, l
 
+def __pad_par_v2(exp: str) -> tuple[str, int]:
+    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. 
+
+    This allows evaluation support even if the user passes an expression with partial parentheses.
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        A tuple containing the rewritten form of the mathematical expression where the parentheses are have been padded to be equal, and the length of the new expression. 
+
+        The length value is for optimization for the current use of this function.
+    """
+    op = 0
+    cp = 0
+
+    exp_l = len(exp)
+    new_l = 0
+    new = ""
+    stack = []
+    # Count the opening and closing parenthesis, as well as constructing the new expression, and count its length.
+    for i in range(exp_l):
+        if (exp[i] == "("):
+            stack.append(exp[i])
+            op += 1
+
+        elif (exp[i] == ")"):
+            if (stack) and (stack[-1] == "("):
+                stack.pop()
+                op -= 1
+            else:
+                stack.append(exp[i])
+                cp += 1
+
+        new += exp[i]
+        new_l += 1
+        
+    new = f"{'(' * cp}{new}"
+    new_l += cp
+
+    new = f"{new}{')' * op}"
+    new_l += op
+
+    return new, new_l
 
 def __remaining_terms(exp: str, start: int) -> str:
     """Returns the remaining expression from the starting index until the end of the expression.
@@ -346,6 +390,7 @@ def __simplify_exp(exp: str) -> str:
 
     for i in range(exp_l):
         pass
+
 def __get_terms_and_expo(exp: str) -> dict[str, int]:
     exp_l = len(exp)
     t_e = {}
@@ -363,7 +408,7 @@ def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
         return exp
 
     if len(vals_) != len(vars_):
-        raise ValueError("Variables ({vars_}) values ({vals_}) are not even.")
+        raise ValueError(f"Variables ({vars_}) values ({vals_}) are not even.")
 
     for var, val in zip(vars_, vals_):
         exp = exp.replace(var, f"({val})")
