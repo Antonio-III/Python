@@ -9,8 +9,8 @@ ROUND_TO = 3+1
 
 def main():
     exp = input("Enter expression:\n")
-    var_c = input("Enter variable character:\n")
-    val = input("Enter found value:\n")
+    var_c = input("Enter variable character/s:\n")
+    val = input("Enter found value/s:\n")
 
     new = rewrite(exp, var_c, val)
 
@@ -20,7 +20,7 @@ def main():
     terms, signs = __get_terms_signs(new)
     
     if not signs:
-        res = __eval_exp_no_sign(exp)
+        res = __eval_exp_no_sign(new)
     else:
         res = __eval_exp_signs(terms, signs)
     
@@ -57,6 +57,9 @@ def rewrite(exp: str, var: str, val: str) -> str:
 
     # Rewrite the expression like `2(5)` to explicit multiplication like `2*(5)*1`. 
     new = __rewrite_par(new)
+
+
+    # new = simplify_exp(new)
 
     # Replace variable terms with the found term (if possible).
     if val:
@@ -120,9 +123,6 @@ def __rewrite_var(exp: str, var: str) -> str:
     i = 0
 
     var_count = exp.count(var)
-
-    # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
-
     for _ in range(var_count):
         var_i = exp.find(var, i)
 
@@ -134,7 +134,69 @@ def __rewrite_var(exp: str, var: str) -> str:
         
         new += f"*{var}"  
 
-        i = var_i+1
+        i = var_i+len(var)
+
+    new += __remaining_terms(exp, i)
+
+    return new
+
+def __rewrite_var_v2(exp: str, var: list[str]) -> str:
+    """
+    Rewrites the expression but explicitly adding a `1*` to any lone variable term.
+
+    Suppports variable terms longer than a single character.
+
+    Args:
+        exp: The mathematical expression.
+        var: The letter representing the unknown value.
+
+    Returns:
+        A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
+    """
+
+    if not var:
+        return exp
+    
+    new = ""
+
+    i = 0
+
+    var_count = exp.count(var)
+    exp_l = len(exp)
+
+
+    # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
+    # Loop through the list of variables.
+    for v in var:
+        i = 0
+        temp = ""
+        v_l = len(v)
+
+        # Find the first instance of the current variable.
+        next = exp.find(v, i)
+        while (next != -1):
+            temp += exp[i: next]
+            if (next == 0) or (exp[i-1] == "-") or not (exp[i-1].isnumeric()):
+                new += "1"
+
+            temp += f"*{v}"
+            i = next + v_l
+            next = exp.find(v, i)
+        # After exhausting the variable, replace the original expression with the new expression. `new` variable is reserved for the output of this function.
+        exp = temp
+
+    # for _ in range(var_count):
+    #     var_i = exp.find(var, i)
+
+    #     # Copy the string until it reaches where the variable is or until the end of the string.
+    #     new += exp[i: var_i]
+
+    #     if (var_i == 0) or (not exp[var_i-1].isnumeric()):
+    #         new += "1"
+        
+    #     new += f"*{var}"  
+
+    #     i = var_i+1
 
     new += __remaining_terms(exp, i)
 
@@ -170,7 +232,7 @@ def __rewrite_par(exp: str) -> str:
                 new += exp[i]
                 continue
 
-            # Add "1" before an opening parenthesis if:
+            # Add "1" before an opening parenthesis if: 
             #   2. The previous character is a negative sign.
             #   3. The previous character is NOT a number. 
             #       For expressions like 3+(2) = 3+1*(2) = 5 and -(1) = -1*(1) = -1.
@@ -298,13 +360,13 @@ def __eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
         The result of the evaluation.
     """
 
-    eval_terms = [f"{eval(t)}" for t in terms]
+    eval_terms = [eval(t) for t in terms]
 
     for i in range(len(terms)):
         print(f"Term {i+1}: {eval_terms[i]}")
 
     # Join the lists together to a new expression. Note the amount of terms is always 1 number higher than the amount of signs.
-    new = "".join([t + s for t, s in zip(eval_terms, signs)])
+    new = "".join([f"{t}" + s for t, s in zip(eval_terms, signs)])
 
     # After joining both lists, add the last term.
     new += terms[-1]
@@ -339,6 +401,24 @@ def __rewrite_expo(exp: str) -> str:
     return new
 # TODO: Add support for simplfiying variable terms (and exponents).
 # Ex: 1x + 2x = 3x, x^2 * x^3 = x^5.
+def __simplify_exp(exp: str) -> str:
+    exp_l = len(exp)
+    t_e = {}
+
+    for i in range(exp_l):
+        pass
+def __get_terms_and_expo(exp: str) -> dict[str, int]:
+    exp_l = len(exp)
+    t_e = {}
+    
+    var = ""
+    const = ""
+    for i in range(exp_l):
+        if (exp[i].isnumeric()):
+            const += exp[1]
+        elif (exp[i].isalpha()):
+            pass
+
 
 if __name__ == "__main__":
     main()
