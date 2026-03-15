@@ -9,8 +9,8 @@ ROUND_TO = 3+1
 
 def main():
     exp = input("Enter expression:\n")
-    var_c = input("Enter variable character/s:\n")
-    val = input("Enter found value/s:\n")
+    var_c = input("Enter variable character/s:\n").strip().split(" ")
+    val = input("Enter found value/s:\n").strip().split(" ")
 
     new = rewrite(exp, var_c, val)
 
@@ -29,7 +29,7 @@ def main():
     if res:
         print(f"Rounded {ROUND_TO} digits: {round(res, ROUND_TO)}")
 
-def rewrite(exp: str, var: str, val: str) -> str:
+def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     """Rewrites a mathematical expression where the value of the variable is plugged in.
 
     Args:
@@ -50,7 +50,7 @@ def rewrite(exp: str, var: str, val: str) -> str:
     new = __rewrite_eq(new)
 
     # Rewrite any lone variable like `x` to explicit multiplication like `1*x`.
-    new = __rewrite_var(new, var)
+    new = __rewrite_var_v2(new, vars)
 
     # Replace caret characters with double-star signs (exponentiation).
     new = __rewrite_expo(new)
@@ -62,8 +62,7 @@ def rewrite(exp: str, var: str, val: str) -> str:
     # new = simplify_exp(new)
 
     # Replace variable terms with the found term (if possible).
-    if val:
-        new = new.replace(var, f"({val})")
+    new = __plug_in_vars(new, vars, vals)
 
     return new
 
@@ -98,7 +97,7 @@ def __rewrite_eq(exp: str) -> str:
 
         i = eq_i+1
 
-    new += __remaining_terms(exp, i)
+    new += exp[i: len(exp)]
     return new
 
 def __rewrite_var(exp: str, var: str) -> str:
@@ -140,7 +139,7 @@ def __rewrite_var(exp: str, var: str) -> str:
 
     return new
 
-def __rewrite_var_v2(exp: str, var: list[str]) -> str:
+def __rewrite_var_v2(exp: str, vars: list[str]) -> str:
     """
     Rewrites the expression but explicitly adding a `1*` to any lone variable term.
 
@@ -154,20 +153,12 @@ def __rewrite_var_v2(exp: str, var: list[str]) -> str:
         A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
     """
 
-    if not var:
+    if not vars:
         return exp
-    
-    new = ""
-
-    i = 0
-
-    var_count = exp.count(var)
-    exp_l = len(exp)
-
 
     # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
     # Loop through the list of variables.
-    for v in var:
+    for v in vars:
         i = 0
         temp = ""
         v_l = len(v)
@@ -175,32 +166,19 @@ def __rewrite_var_v2(exp: str, var: list[str]) -> str:
         # Find the first instance of the current variable.
         next = exp.find(v, i)
         while (next != -1):
+
             temp += exp[i: next]
             if (next == 0) or (exp[i-1] == "-") or not (exp[i-1].isnumeric()):
-                new += "1"
+                temp += "1"
 
             temp += f"*{v}"
             i = next + v_l
             next = exp.find(v, i)
         # After exhausting the variable, replace the original expression with the new expression. `new` variable is reserved for the output of this function.
+        temp += exp[i: len(exp)]
         exp = temp
 
-    # for _ in range(var_count):
-    #     var_i = exp.find(var, i)
-
-    #     # Copy the string until it reaches where the variable is or until the end of the string.
-    #     new += exp[i: var_i]
-
-    #     if (var_i == 0) or (not exp[var_i-1].isnumeric()):
-    #         new += "1"
-        
-    #     new += f"*{var}"  
-
-    #     i = var_i+1
-
-    new += __remaining_terms(exp, i)
-
-    return new
+    return exp
 
 def __rewrite_par(exp: str) -> str:
     """Rewrites parentheses in the expression to represent multiplication.
@@ -419,6 +397,17 @@ def __get_terms_and_expo(exp: str) -> dict[str, int]:
         elif (exp[i].isalpha()):
             pass
 
+def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
+    if (not vars_) or (not vals_):
+        return exp
+
+    if len(vals_) != len(vars_):
+        raise ValueError("Variables ({vars_}) values ({vals_}) are not even.")
+
+    for var, val in zip(vars_, vals_):
+        exp = exp.replace(var, f"({val})")
+
+    return exp
 
 if __name__ == "__main__":
     main()
