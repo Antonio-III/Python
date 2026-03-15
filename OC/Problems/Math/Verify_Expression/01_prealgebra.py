@@ -51,7 +51,7 @@ def rewrite(exp: str, var: str, val: str) -> str:
     new = __rewrite_var(new, var)
 
     # If multiplication is represented with parentheses, rewrite the expression [like 2(5)] to explicit multiplication [like 2*(5)*1]. 
-    new = __rewrite_par_v2(new)
+    new = __rewrite_par(new)
 
     # Replace variable terms with the found term (if possible).
     if val:
@@ -136,7 +136,6 @@ def __rewrite_var(exp: str, var: str) -> str:
 
     return new
 
-# TODO: Support nested parentheses expressions.
 def __rewrite_par(exp: str) -> str:
     """Rewrites parentheses in the expression to represent multiplication.
 
@@ -151,59 +150,52 @@ def __rewrite_par(exp: str) -> str:
     Returns:
         str: The mathematical expression with all parentheses rewritten as python multiplication.
     """
+    op_l = exp.count("(")
+    cp_l = exp.count(")")
+
+    # Pad the original expression with parentheses on either end if one of them is lesser.
+    if op_l < cp_l:
+        diff = cp_l - op_l
+        exp = f"{'('*diff}{exp}"
+        op_l += diff
+
+    elif op_l > cp_l:
+        diff = op_l - cp_l
+        exp = f"{exp}{')'*diff}"
+        cp_l += diff
+
+    exp_l = len(exp)
     new = ""
 
-    open_par = exp.count("(")
-    closed_par = exp.count(")")
+    for i in range(exp_l):
+        if (exp[i] == "("):
+            # Add "1" before an opening parenthesis if:
+            #   1. The opening parenthesis is at the start.
+            #   2. The previous character is a negative sign.
+            #   3. The previous character is NOT a number. 
+            #       For expressions like 3+(2) = 3+1*(2) = 5 and -(1) = -1*(1) = -1.
+            if (i == 0) or exp[i-1] == "-" or not (exp[i-1].isnumeric()): 
+                new += "1"
 
-    if (open_par != closed_par):
-        raise SyntaxError(f"Invalid parenthesis count: {open_par} open: {closed_par} closed")
+            # Add a multiplication sign before every opening parenthesis.
+            new += "*"
 
-    i = 0
+        # Add the current character to the new expression.
+        new += exp[i]
 
-    open_par_i = exp.find("(")
-    close_par_i = exp.find(")")
+        # Add "1" in the expression if:
+        #   1. We are in the middle of the expression, and the current character is an opening parenthesis or a negative sign, and the next character is a closing parenthesis. 
+        #   1.1 This allows evaluation of expressions like (-) = 1*(-1) = -1.
+        # This code block cannot exist alongside the above condition because this block requires the current character to be added to the new expression.
+        if (i+1 < exp_l) and ((exp[i] == "(") or (exp[i] == "-")) and (exp[i+1] == ")"):
+                new += "1"
 
-    # O(n^2). Need to be reduced to O(n) time.
-    for _ in range(open_par):
-        new += exp[i: open_par_i]
-
-        # Append "1" when encountering open parenthesis.
-        if (open_par_i == 0) or not (exp[open_par_i-1].isnumeric()):
-            new += "1"
-
-        # Append term between parentheses with multiplication signs on both ends of the term. Parentheses are kept.
-        new += f"*({__n_in_par(exp, open_par_i, close_par_i)})*"
-
-        # Append "1" when encountering closed parenthesis if:
-        # 1. Closing parenthesis is the last character. OR
-        # 2. Next character after closing is NOT an opening parenthesis. OR
-        # 3. Next character after closing is not a number.
-        if (close_par_i+1 == len(exp)) or (close_par_i+1 != open_par_i) or not (exp[close_par_i+1].isnumeric()):
-            new += "1"
-    
-        i = close_par_i+1
-
-        open_par_i = exp.find("(", open_par_i+1)
-        close_par_i = exp.find(")", close_par_i+1)
-
-    # Append remaining terms after dealing with all the parentheses.
-    new += __remaining_terms(exp, i)
+        # Add a multiplication sign if:
+        #   1. We are in the middle of the expression, and the next character is a number.
+        if (i+1 < exp_l) and (exp[i] == ")") and (exp[i+1].isnumeric()):
+            new += "*"
 
     return new
-
-def __n_in_par(exp: str, open_par_i: int, close_par_i: int) -> str:
-    """Returns the expression between the opening and closing parenthesis.
-
-    Args:
-        exp (str): The mathematical expression.
-        open_par_i (int): Index of the opening parenthesis.
-        close_par_i (int): Index of the closing parenthesis.
-
-    Returns:
-        str: The expression between the opening and closing parenthesis.
-    """
-    return exp[open_par_i+1 : close_par_i]
 
 def __remaining_terms(exp: str, start: int) -> str:
     """Returns the remaining expression from the starting index until the end of the expression.
@@ -222,7 +214,7 @@ def __remaining_terms(exp: str, start: int) -> str:
 # WIP
 # Change this function to get EVERY term between signs.
 def __get_terms_sign(exp: str) -> tuple:
-    """Returns the terms between the signs. If there are no signs, the expression is returned.
+    """Returns the terms between the signs, and the signs. If there are no signs, the expression is returned.
 
     Args:
         exp (str): _description_
@@ -262,64 +254,6 @@ def __eval_no_sign(exp: str) -> int | float | bool:
     """
     res = eval(exp)
     return res
-
-
-def __rewrite_par_v2(exp: str) -> str:
-    """Rewrites parentheses in the expression to represent multiplication.
-
-    This function should only be ran AFTER converting all variables to numeric terms.
-
-    Args:
-        exp (str): The mathematical expression.
-
-    Raises:
-        SyntaxError: There is an uneven count of open and closed parentheses.
-
-    Returns:
-        str: The mathematical expression with all parentheses rewritten as python multiplication.
-    """
-    new = ""
-
-    # Open and closing parentheses indices
-    opi = []
-    cpi= []
-
-    for i, c in enumerate(exp):
-        if c == "(":
-            opi.append(i)
-        elif c == ")":
-            cpi.append(i)
-    
-    opi_l = len(opi)
-    cpi_l = len(cpi)
-
-    
-
-    t = 0
-
-    # O(n^2). Need to be reduced to O(n) time.
-    for i in range(opi_l):
-        new += exp[t: opi[i]]
-
-        # Append "1" when encountering open parenthesis.
-        if (opi[i] == 0) or not (exp[opi[i]-1].isnumeric()):
-            new += "1"
-
-        # Append term between parentheses with multiplication signs on both ends of the term. Parentheses are kept.
-        new += f"*({__n_in_par(exp, opi[i], cpi[i])})*"
-
-        # Append "1" when encountering closed parenthesis if:
-        # 1. Closing parenthesis is the last character. OR
-        # 2. Next character after closed par is NEITHER numeric or a parenthesis.
-        if (cpi[i]+1 == len(exp)) or not (exp[cpi[i]+1].isnumeric() or (exp[cpi[i]+1] in "()")):
-            new += "1"
-    
-        t = cpi[i]+1
-
-    # Append remaining terms after dealing with all the parentheses.
-    new += __remaining_terms(exp, t)
-
-    return new
 
 # TODO: Add support for caret expressions as exponentiation.
 # TODO: Add support for variable operations without knowing its value.
