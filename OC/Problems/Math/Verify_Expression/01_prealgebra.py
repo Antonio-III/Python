@@ -17,12 +17,12 @@ def main():
     # For debugging
     print(f"Expression: {new}")
     
-    terms, sign = __get_terms_sign(new)
+    terms, signs = __get_terms_signs(new)
     
-    if not sign:
-        res = __eval_no_sign(terms)
+    if not signs:
+        res = __eval_exp_no_sign(exp)
     else:
-        res = __eval_sign(terms, sign)
+        res = __eval_exp_signs(terms, signs)
     
     print(f"Result: {res}")
 
@@ -33,12 +33,14 @@ def rewrite(exp: str, var: str, val: str) -> str:
     """Rewrites a mathematical expression where the value of the variable is plugged in.
 
     Args:
-        exp (str): The mathematical expression.
-        var (str): The letter representing the unknown value.
-        val (str): The value found after solving the equation.
+        exp: The mathematical expression.
+        var: The letter representing the unknown value.
+        val: The value found after solving the equation.
 
     Returns:
-        str: A reformatted expression of the mathematical expression where the solution has been plugged in. It's up to you to put this into the eval function.
+        A new expression where the solution has been plugged in. 
+
+        The new expression is passable to the `eval` function for evaluation.
     """
 
     # Remove whitespaces from expression.
@@ -66,10 +68,10 @@ def __rewrite_eq(exp: str) -> str:
     """Replaces an equation symbol with double equal signs. Does not replace the equal symbol if it's part of an inequality.
 
     Args:
-        exp (str): The mathematical expression.
+        exp: The mathematical expression.
 
     Returns:
-        str: A version of the expression where any `=` is replaced with `==`.
+        A new expression where every equality is replaced with a double-equal sign.
     """
     eq_count = exp.count("=")
 
@@ -96,7 +98,6 @@ def __rewrite_eq(exp: str) -> str:
     new += __remaining_terms(exp, i)
     return new
 
-
 def __rewrite_var(exp: str, var: str) -> str:
     """
     Rewrites the expression but explicitly adding a `1*` to any lone variable term.
@@ -104,11 +105,11 @@ def __rewrite_var(exp: str, var: str) -> str:
     Suppports variable terms longer than a single character.
 
     Args:
-        exp (str): The mathematical expression.
-        var (str): The letter representing the unknown value.
+        exp: The mathematical expression.
+        var: The letter representing the unknown value.
 
     Returns:
-        str: A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
+        A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
     """
 
     if not var:
@@ -145,13 +146,13 @@ def __rewrite_par(exp: str) -> str:
     This function should only be ran AFTER converting all variables to include their coefficient.
 
     Args:
-        exp (str): The mathematical expression.
+        expThe mathematical expression.
 
     Raises:
         SyntaxError: There is an uneven count of open and closed parentheses.
 
     Returns:
-        str: The mathematical expression with all parentheses rewritten as python multiplication.
+        The mathematical expression with all parentheses rewritten as python multiplication.
     """
     exp, exp_l = __pad_par(exp)
 
@@ -199,13 +200,17 @@ def __rewrite_par(exp: str) -> str:
 
 # This also returns the new length of the expression (for optimization).
 def __pad_par(exp: str) -> tuple[str, int]:
-    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. This allows evaluation support even if the user passes an expression with partial parentheses.
+    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. 
+
+    This allows evaluation support even if the user passes an expression with partial parentheses.
 
     Args:
-        exp (str): The mathematical expression.
+        exp: The mathematical expression.
 
     Returns:
-        str: A tuple containing the rewritten form of the mathematical expression where the parentheses are have been padded to be equal, and the length of the new expression. The length value is for optimization for the current use of this function.
+        A tuple containing the rewritten form of the mathematical expression where the parentheses are have been padded to be equal, and the length of the new expression. 
+
+        The length value is for optimization for the current use of this function.
     """
     op = 0
     cp = 0
@@ -240,71 +245,100 @@ def __remaining_terms(exp: str, start: int) -> str:
     Used after terminating a loop.
 
     Args:
-        exp (str): The mathematical expression.
-        start (int): Index representing the start of the remaining terms.
+        exp: The mathematical expression.
+        start: Index representing the start of the remaining terms.
 
     Returns:
-        str: The remaining expression from the starting index until the end of the expression.
+        The remaining expression from the starting index until the end of the expression.
     """
     return exp[start: len(exp)]
 
 # Change this function to get EVERY term between signs.
-def __get_terms_sign(exp: str) -> tuple:
-    """Returns the terms between the signs, and the signs. If there are no signs, the expression is returned.
+def __get_terms_signs(exp: str) -> tuple[list[str], list[str]]:
+    """Returns the terms between the signs, and the signs.
 
     Args:
-        exp (str): _description_
+        exp: The mathematical expression.
 
     Returns:
-        tuple: _description_
+        The list of terms and signs found in the expression.
     """
-    sign = ""
-    for c in exp:
-        if (c == "=" or c == "<" or c == ">"):
-            sign += c
-        
-    if not sign:
-        return exp, ""
-    
-    return exp.split(sign), sign
+    signs = []
+    terms = []
 
-def __eval_sign(terms: list, sign: str) -> int | float | bool:
+    sign = ""
+    term = ""
+    exp_l = len(exp)
+    for i in range(exp_l):
+        if (exp[i] == "=" or exp[i] == "<" or exp[i] == ">"):
+            sign += exp[i]
+        else:
+            term += exp[i]
+
+        if len(sign) == 2:
+            signs.append(sign)
+            terms.append(term)
+
+            sign = ""
+            term = ""
+
+        if i+1 == exp_l:
+            terms.append(term)
+
+    return terms, signs
+
+def __eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
     """Evaluation process for when the expression has a sign.
 
     Args:
-        terms (list): A list of expressions between the signs.
-        sign (str): The sign in the expression.
-    """
-    res = eval(sign.join(terms))
+        terms: A list of expressions between the signs.
+        signs: The sign in the expression.
 
-    eval_terms = (eval(t) for t in terms)
-    for t in eval_terms:
-        print(t)
+    Returns:
+        The result of the evaluation.
+    """
+
+    eval_terms = [eval(t) for t in terms]
+
+    for i in range(len(terms)):
+        print(f"Term {i+1}: {eval_terms[i]}")
+
+    # Join the lists together to a new expression. Note the amount of terms is always 1 number higher than the amount of signs.
+    new = "".join([t + s for t, s in zip(eval_terms, signs)])
+
+    # After joining both lists, add the last term.
+    new += terms[-1]
+
+    # Evaluate the expression and return the result.
+    res = eval(new)
 
     return res
-def __eval_no_sign(exp: str) -> int | float | bool:
+
+def __eval_exp_no_sign(exp: str) -> int | float:
     """Evaluation process for when the expression has no sign.
 
     Args:
-        exp (str): The mathematical expression.
+        exp: The mathematical expression.
+
+    Returns:
+        The result of the evaluation.
     """
     res = eval(exp)
     return res
 
 def __rewrite_expo(exp: str) -> str:
-    """Rewrite caret characters in the expression as exponentitation.
+    """Replace caret characters in the expression with a double-star sign.
 
     Args:
-        exp (str): The mathematical expression.
+        exp: The mathematical expression.
 
     Returns:
-        str: New expression where all caret characters are replaced with a double-star sign.
+        New expression where all caret characters are replaced with a double-star sign.
     """
     new = exp.replace("^", "**")
     return new
 # TODO: Add support for simplfiying variable terms (and exponents).
 # Ex: 1x + 2x = 3x, x^2 * x^3 = x^5.
-
 
 if __name__ == "__main__":
     main()
