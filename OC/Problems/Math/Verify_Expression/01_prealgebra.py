@@ -150,21 +150,8 @@ def __rewrite_par(exp: str) -> str:
     Returns:
         str: The mathematical expression with all parentheses rewritten as python multiplication.
     """
-    op_l = exp.count("(")
-    cp_l = exp.count(")")
+    exp, exp_l = __pad_par(exp)
 
-    # Pad the original expression with parentheses on either end if one of them is lesser.
-    if op_l < cp_l:
-        diff = cp_l - op_l
-        exp = f"{'('*diff}{exp}"
-        op_l += diff
-
-    elif op_l > cp_l:
-        diff = op_l - cp_l
-        exp = f"{exp}{')'*diff}"
-        cp_l += diff
-
-    exp_l = len(exp)
     new = ""
 
     for i in range(exp_l):
@@ -197,6 +184,41 @@ def __rewrite_par(exp: str) -> str:
 
     return new
 
+# This returns an int for optimization.
+def __pad_par(exp: str) -> tuple[str, int]:
+    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. This allows evaluation support even if the user passes an expression with partial parentheses.
+
+    Args:
+        exp (str): The mathematical expression.
+
+    Returns:
+        str: A tuple containing the rewritten form of the mathematical expression where the parentheses are have been padded to be equal, and the length of the new expression. The length value is for optimization for the current use of this function.
+    """
+    op = 0
+    cp = 0
+    l = 0
+    new = ""
+
+    # Count the opening and closing parenthesis, as well as constructing the new expression, and count its length.
+    for c in exp:
+        if (c == "("):
+            op += 1
+        elif (c == ")"):
+            cp += 1
+        new += c
+        l += 1
+
+    # Pad the complementing parenthesis to the new expression.
+    if (op < cp):
+        diff = cp - op
+        new = f"{'(' * diff}{new}"
+    elif (op > cp):
+        diff = cp - op
+        new = f"{new}{')' * diff}"
+    
+    return new, l
+
+
 def __remaining_terms(exp: str, start: int) -> str:
     """Returns the remaining expression from the starting index until the end of the expression.
 
@@ -211,7 +233,6 @@ def __remaining_terms(exp: str, start: int) -> str:
     """
     return exp[start: len(exp)]
 
-# WIP
 # Change this function to get EVERY term between signs.
 def __get_terms_sign(exp: str) -> tuple:
     """Returns the terms between the signs, and the signs. If there are no signs, the expression is returned.
