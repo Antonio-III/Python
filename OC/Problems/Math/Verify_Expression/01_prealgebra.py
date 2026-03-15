@@ -50,7 +50,7 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     new = __rewrite_eq(new)
 
     # Rewrite any lone variable like `x` to explicit multiplication like `1*x`.
-    new = __rewrite_var_v2(new, vars)
+    new = __rewrite_var(new, vars)
 
     # Replace caret characters with double-star signs (exponentiation).
     new = __rewrite_expo(new)
@@ -100,46 +100,7 @@ def __rewrite_eq(exp: str) -> str:
     new += exp[i: len(exp)]
     return new
 
-def __rewrite_var(exp: str, var: str) -> str:
-    """
-    Rewrites the expression but explicitly adding a `1*` to any lone variable term.
-
-    Suppports variable terms longer than a single character.
-
-    Args:
-        exp: The mathematical expression.
-        var: The letter representing the unknown value.
-
-    Returns:
-        A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
-    """
-
-    if not var:
-        return exp
-    
-    new = ""
-
-    i = 0
-
-    var_count = exp.count(var)
-    for _ in range(var_count):
-        var_i = exp.find(var, i)
-
-        # Copy the string until it reaches where the variable is or until the end of the string.
-        new += exp[i: var_i]
-
-        if (var_i == 0) or (not exp[var_i-1].isnumeric()):
-            new += "1"
-        
-        new += f"*{var}"  
-
-        i = var_i+len(var)
-
-    new += __remaining_terms(exp, i)
-
-    return new
-
-def __rewrite_var_v2(exp: str, vars: list[str]) -> str:
+def __rewrite_var(exp: str, vars: list[str]) -> str:
     """
     Rewrites the expression but explicitly adding a `1*` to any lone variable term.
 
