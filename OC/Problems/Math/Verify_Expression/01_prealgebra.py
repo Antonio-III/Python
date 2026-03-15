@@ -270,18 +270,19 @@ def __get_exps_signs(exp: str) -> tuple[list[str], list[str]]:
     for i in range(exp_l):
         if (exp[i] == "=" or exp[i] == "<" or exp[i] == ">"):
             sign += exp[i]
+
+            if term:
+                terms.append(term)
+
+            term = ""
+
         else:
             term += exp[i]
 
         if len(sign) == 2:
             signs.append(sign)
-            terms.append(term)
-
             sign = ""
-            term = ""
 
-        if i < exp_l:
-            terms.append(term)
 
     return terms, signs
 
