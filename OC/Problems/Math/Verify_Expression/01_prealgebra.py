@@ -17,12 +17,12 @@ def main():
     # For debugging
     print(f"Expression: {new}")
     
-    terms, signs = __get_exps_signs(new)
+    terms, signs = get_exps_signs(new)
     
     if not signs:
-        res = __eval_exp_no_sign(new)
+        res = eval_exp_no_sign(new)
     else:
-        res = __eval_exp_signs(terms, signs)
+        res = eval_exp_signs(terms, signs)
     
     print(f"Result: {res}")
 
@@ -149,21 +149,21 @@ def __rewrite_par(exp: str) -> str:
 
     for i in range(exp_l):
         if (exp[i] == "("):
-            # Add "1" before an opening parenthesis if:
+            # When encountering an opening parenthesis,
+            # Add "1" if:
             #   1. The opening parenthesis is at the start.
             if (i == 0):
                 new += "1"
-            
-            # This algorithm should not interfere with parentheses meant for exponentiation.
-            elif ((i > 1) and exp[i-2: i] == "**") or (exp[i-1] == "^"):
+
+            # Write the parenthesis and move to the next character if these characters are encountered.
+            elif (exp[i-1] == "-") or ((i > 1) and exp[i-2: i] == "**") or (exp[i-1] == "^"):
                 new += exp[i]
                 continue
 
-            # Add "1" before an opening parenthesis if: 
-            #   2. The previous character is a negative sign. OR
-            #   3. The previous character is neither a number or a closing parenthesis. 
+            # Add "1" before an opening parenthesis if:
+            #   1. The previous character is neither a number or a closing parenthesis. 
             #       For expressions like 3+(2) = 3+1*(2) = 5 and -(1) = -1*(1) = -1.
-            elif exp[i-1] == "-" or (not (exp[i-1].isnumeric()) and exp[i-1] != ")"): 
+            elif ((not exp[i-1].isnumeric()) and (exp[i-1] != ")")): 
                 new += "1"
 
             # Add a multiplication sign before the opening parenthesis.
@@ -203,13 +203,16 @@ def __pad_par(exp: str) -> str:
     new = ""
     stack = []
 
-    # Count the opening and closing parenthesis, as well as constructing the new expression, and count its length.
+    # Track the opening and closing parenthesis through a stack, as well as constructing the new expression.
     for i in range(len(exp)):
         if (exp[i] == "("):
             stack.append(exp[i])
             op += 1
 
         elif (exp[i] == ")"):
+            # When encountering a closed parenthesis, we check if we find a match in the parenthesis stack.
+            # If a match is found, we pop the corresponding opening parenthesis, and update its count.
+            # If no match, add the closed parenthesis to the stack, and update its count.
             if (stack) and (stack[-1] == "("):
                 stack.pop()
                 op -= 1
@@ -218,29 +221,15 @@ def __pad_par(exp: str) -> str:
                 cp += 1
 
         new += exp[i]
-        
-    new = f"{'(' * cp}{new}"
 
+    # After constructing the new expression, we pad the expression with the complementing parenthesis based on the count of the opposing parenthesis (like pad the expression with opening parentheses for the same amount of times as the remaining closing parenthesis in the stack). Opening parenthesis will always be at the start and closing parenthesis at the end.
+    new = f"{'(' * cp}{new}"
     new = f"{new}{')' * op}"
 
     return new
 
-def __remaining_terms(exp: str, start: int) -> str:
-    """Returns the remaining expression from the starting index until the end of the expression.
-
-    Used after terminating a loop.
-
-    Args:
-        exp: The mathematical expression.
-        start: Index representing the start of the remaining terms.
-
-    Returns:
-        The remaining expression from the starting index until the end of the expression.
-    """
-    return exp[start: len(exp)]
-
-def __get_exps_signs(exp: str) -> tuple[list[str], list[str]]:
-    """Returns the expressions between the equality/inequality symbols, and the said symbols, found in the original expression.
+def get_exps_signs(exp: str) -> tuple[list[str], list[str]]:
+    """Returns the expressions between the equality/inequality symbols and the symbols, found in the original expression.
 
     Args:
         exp: The mathematical expression.
@@ -272,15 +261,15 @@ def __get_exps_signs(exp: str) -> tuple[list[str], list[str]]:
 
     return terms, signs
 
-def __eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
-    """Evaluation process for when the expression has a sign.
+def eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
+    """Evaluation process for when the expression has an eq-inequality symbol.
 
     Args:
         terms: A list of expressions between the signs.
         signs: The sign in the expression.
 
     Returns:
-        The result of the evaluation.
+        A boolean as result of the evaluation.
     """
 
     eval_terms = [eval(t) for t in terms]
@@ -299,14 +288,14 @@ def __eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
 
     return res
 
-def __eval_exp_no_sign(exp: str) -> int | float:
-    """Evaluation process for when the expression has no sign.
+def eval_exp_no_sign(exp: str) -> int | float:
+    """Evaluation process for when the expression has no eq/inequality sign.
 
     Args:
         exp: The mathematical expression.
 
     Returns:
-        The result of the evaluation.
+        A number as result of the evaluation.
     """
     res = eval(exp)
     return res
@@ -323,25 +312,13 @@ def __rewrite_expo(exp: str) -> str:
     new = exp.replace("^", "**")
     return new
 # TODO: Add support for simplfiying variable terms (and exponents).
-# Ex: 1x + 2x = 3x, x^2 * x^3 = x^5.
+# Ex: 1x + 2x = 3x and x^2 * x^3 = x^5.
 def __simplify_exp(exp: str) -> str:
     exp_l = len(exp)
     t_e = {}
 
     for i in range(exp_l):
         pass
-
-def __get_terms_and_expo(exp: str) -> dict[str, int]:
-    exp_l = len(exp)
-    t_e = {}
-    
-    var = ""
-    const = ""
-    for i in range(exp_l):
-        if (exp[i].isnumeric()):
-            const += exp[1]
-        elif (exp[i].isalpha()):
-            pass
 
 def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
     if (not vars_) or (not vals_):
