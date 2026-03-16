@@ -143,8 +143,13 @@ def __rewrite_par(exp: str) -> str:
         The mathematical expression with all parentheses rewritten as python multiplication.
     """
     exp = __pad_par(exp)
-
     exp_l = len(exp)
+
+    # The signs of a number
+    signs = ["-", "+"]
+    
+    op_symbs = ["+", "-", "*", "/", "^"]
+
     new = ""
 
     for i in range(exp_l):
@@ -155,8 +160,9 @@ def __rewrite_par(exp: str) -> str:
             if (i == 0):
                 new += "1"
 
-            # Write the parenthesis and move to the next character if these characters are encountered.
-            elif (exp[i-1] == "-") or ((i > 1) and exp[i-2: i] == "**") or (exp[i-1] == "^"):
+            # Write the parenthesis and move to the next character if these characters (operation symbols) are encountered.
+            # This branch skips adding a "1*" before writing the parenthesis.
+            elif (exp[i-1] in op_symbs) or ((i > 1) and exp[i-2: i] == "**"):
                 new += exp[i]
                 continue
 
@@ -176,7 +182,7 @@ def __rewrite_par(exp: str) -> str:
         #   1. We are in the middle of the expression, and the current character is an opening parenthesis or a negative sign, and the next character is a closing parenthesis. 
         #   1.1 This allows evaluation of expressions like (-) = 1*(-1) = -1.
         # This code block cannot exist alongside the above condition because this block requires the current character to be added to the new expression.
-        if (i+1 < exp_l) and ((exp[i] == "(") or (exp[i] == "-")) and (exp[i+1] == ")"):
+        if (i+1 < exp_l) and ((exp[i] == "(") or (exp[i] in signs)) and (exp[i+1] == ")"):
                 new += "1"
 
         # Add a multiplication sign if:
