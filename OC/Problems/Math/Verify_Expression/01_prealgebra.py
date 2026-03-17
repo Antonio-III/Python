@@ -46,6 +46,9 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     # Remove whitespaces from expression.
     new = exp.replace(" ", "")
 
+    # Replace variable terms with the found term (if possible).
+    new = __plug_in_vars(new, vars, vals)
+
     # Replace lone equal signs with double equal signs.
     new = __rewrite_eq(new)
 
@@ -60,9 +63,6 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
 
     # new = simplify_exp(new)
-
-    # Replace variable terms with the found term (if possible).
-    new = __plug_in_vars(new, vars, vals)
 
     return new
 
@@ -129,67 +129,42 @@ def __rewrite_var(exp: str, vars: list[str]) -> str:
     return exp
 
 def __rewrite_par(exp: str) -> str:
-    """Rewrites parentheses in the expression to represent multiplication.
-
-    This function should only be ran AFTER converting all variables to include their coefficient.
+    """Rewrites parentheses in the expression to represent multiplication (star sign).
 
     Args:
-        expThe mathematical expression.
-
-    Raises:
-        SyntaxError: There is an uneven count of open and closed parentheses.
+        exp: The mathematical expression.
 
     Returns:
-        The mathematical expression with all parentheses rewritten as python multiplication.
+        The mathematical expression with all parentheses rewritten as multiplication.
     """
     exp = __pad_par(exp)
     exp_l = len(exp)
 
-    # The signs of a number
-    signs = ["-", "+"]
-    
-    op_symbs = ["+", "-", "*", "/", "^"]
-
     new = ""
 
     for i in range(exp_l):
-        if (exp[i] == "("):
-            # When encountering an opening parenthesis,
-            # Add "1" if:
-            #   1. The opening parenthesis is at the start.
-            if (i == 0):
+        # When encountering an opening parenthesis,
+        if (exp[i] == "(") and (i >= 1):
+            if (exp[i-1] == "("):
+            # Add "1" before an opening parenthesis if the previous character is an opening parenthesis.
                 new += "1"
 
-            # Write the parenthesis and move to the next character if these characters (operation symbols) are encountered.
-            # This branch skips adding a "1*" before writing the parenthesis.
-            elif (exp[i-1] in op_symbs) or ((i > 1) and exp[i-2: i] == "**"):
-                new += exp[i]
-                continue
-
-            # Add "1" before an opening parenthesis if:
-            #   1. The previous character is neither a number or a closing parenthesis. 
-            #       For expressions like 3+(2) = 3+1*(2) = 5 and -(1) = -1*(1) = -1.
-            elif ((not exp[i-1].isnumeric()) and (exp[i-1] != ")")): 
-                new += "1"
-
-            # Add a multiplication sign before the opening parenthesis.
-            new += "*"
+            # Add a multiplication sign if the last character in the new string is a number.
+            if (new[-1].isnumeric()):
+                new += "*"
 
         # Add the current character to the new expression.
         new += exp[i]
 
-        # Add "1" in the expression if:
-        #   1. We are in the middle of the expression, and the current character is an opening parenthesis or a negative sign, and the next character is a closing parenthesis. 
-        #   1.1 This allows evaluation of expressions like (-) = 1*(-1) = -1.
-        # This code block cannot exist alongside the above condition because this block requires the current character to be added to the new expression.
-        if (i+1 < exp_l) and ((exp[i] == "(") or (exp[i] in signs)) and (exp[i+1] == ")"):
+        if (i+1 < exp_l): 
+            # Add "1" in the expression if we are in an empty parenthesis.
+            # This allows evaluation of expressions like (-) = 1*(-1) = -1.
+            if ((exp[i] == "(") or (exp[i] == "-")) and (exp[i+1] == ")"):
                 new += "1"
-
-        # Add a multiplication sign if:
-        #   1. We are a closing parenthesis in the middle of the expression, and the next character is a number or an opening parenthesis.
-        #   1.1 This also handles parentheses belonging to exponents, making 2**(3)3 = 2**(3)*3
-        if (i+1 < exp_l) and (exp[i] == ")") and (exp[i+1].isnumeric()):
-            new += "*"
+            # Add a multiplication sign if we are a closing parenthesis, and the next character is a number or an opening parenthesis.
+            #   This also handles parentheses belonging to exponents, making 2**(3)3 = 2**(3)*3.
+            elif (exp[i] == ")") and (exp[i+1].isnumeric() or (exp[i+1] == "(")):
+                new += "*"
 
     return new
 
