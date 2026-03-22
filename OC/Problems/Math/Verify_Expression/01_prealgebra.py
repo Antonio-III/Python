@@ -17,7 +17,7 @@ def main():
     # For debugging
     print(f"Expression: {new}")
     
-    terms, signs = get_exps_signs(new)
+    terms, signs = get_exps_btween_eqsigns(new)
     
     if not signs:
         res = eval_exp_no_sign(new)
@@ -209,7 +209,7 @@ def __pad_par(exp: str) -> str:
 
     return new
 
-def get_exps_signs(exp: str) -> tuple[list[str], list[str]]:
+def get_exps_btween_eqsigns(exp: str) -> tuple[list[str], list[str]]:
     """Returns the expressions between the equality/inequality symbols and the symbols, found in the original expression.
 
     Args:
