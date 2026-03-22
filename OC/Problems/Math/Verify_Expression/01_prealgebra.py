@@ -292,21 +292,14 @@ def __rewrite_expo(exp: str) -> str:
     """
     new = exp.replace("^", "**")
     return new
-# TODO: Add support for simplfiying variable terms (and exponents).
-# Ex: 1x + 2x = 3x and x^2 * x^3 = x^5.
-def __simplify_exp(exp: str) -> str:
-    exp_l = len(exp)
-    t_e = {}
 
-    for i in range(exp_l):
-        pass
 
 def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
     if (not vars_) or (not vals_):
         return exp
 
     if len(vals_) != len(vars_):
-        raise ValueError(f"Variables ({vars_}) values ({vals_}) are not even.")
+        raise ValueError(f"Expected ({vars_}) values but ({vals_}) plugged.")
 
     for var, val in zip(vars_, vals_):
         exp = exp.replace(var, f"({val})")
