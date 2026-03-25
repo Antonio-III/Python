@@ -94,6 +94,10 @@ class term():
                         del self.vars[v]
                         del divisor.vars[v]
 
+# Feature to turn an expression into a term class (WIP)
+# Ex: "5x^2" becomes a term class with ceoff = 5, var = {"x": 2}, div = 1.
+
+# Future update: Polynomial class whose values are on a list of term classes.
 def __record_vars(exp: str) -> tuple[list[str], list[int]]:
     """Parse the variables from a string expression. Records variables and exponents into separate lists.
 
@@ -155,6 +159,26 @@ def parse_exp(exp: str):
     vars = __parse_vars(exp)
     div = __parse_div(exp)
 
+def __parse_coeff(exp:str) -> int:
+    """Turns the coefficient in the expression to an integer. Expression must be sorted.
+
+    _extended_summary_
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        The string of numbers at the front of the expression (coefficient).
+    """
+    exp_l = len(exp)
+    coeff = ""
+    for i in range(exp_l):
+        if exp[i].isalpha():
+            break
+        if exp[i].isnumeric():
+            coeff += exp[i]
+    return int(coeff)
+
 def __parse_div(exp: str):
     i = exp.find("/")
     
@@ -164,16 +188,9 @@ def __parse_div(exp: str):
     coeff = __parse_coeff(exp[i])
     vars  = __parse_vars(exp[i])
 
-    term = term(coeff, vars)
-    return term
-
-def __parse_div(self, div: str):
-    int_d = int(div)
-    float_d = float(div)
-    return (int_d if (int_d == float_d) else float_d)
-
-
-# Extras
+    t = term(coeff, vars)
+    return t
+# ---
 
 def __is_divisible(dividend: int, divisor: int) -> bool:
     q1 = dividend/divisor
@@ -196,11 +213,12 @@ def __find_GCF(n1: int, n2: int):
     i = j = 1
 
     gcf = 1
-    while ((i+1 < n1_flen) or (j+1 < n2_flen)):
+    while ((i < n1_flen) and (j < n2_flen)):
         if (n1_factors[i] == n2_factors[j]):
             gcf = n1_factors[i]
             i += 1
             j += 1
+            continue
 
         if n1_factors[i] < n2_factors[j]:
             i += 1
@@ -222,5 +240,8 @@ def __find_factors(n: int) -> list[int]:
 
         i += 1
     return sorted(factors)
+
+
+
 if __name__ == "__main__":
     main()
