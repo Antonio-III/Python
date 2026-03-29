@@ -58,11 +58,8 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     # Replace caret characters with double-star signs (exponentiation).
     new = __rewrite_expo(new)
 
-    # Rewrite the expression like `2(5)` to explicit multiplication like `2*(5)*1`. 
+    # Rewrite the expression like `2(5)` to explicit multiplication like `2*(5)`. 
     new = __rewrite_par(new)
-
-
-    # new = simplify_exp(new)
 
     return new
 

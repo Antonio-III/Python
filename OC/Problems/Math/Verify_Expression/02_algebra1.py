@@ -1,19 +1,11 @@
 # TODO: Add support for simplfiying variable terms (and exponents).
 # Ex: 1x + 2x = 3x and x^2 * x^3 = x^5.
 def main():
-    # if (not (coeff := input("Enter coefficient:\n"))) or (not coeff.isnumeric()):
-    #     raise ValueError("Coefficient is not numeric.")
+    if (not (exp := input("Enter expression:\n"))):
+        raise ValueError("Invalid expression.")
 
-    # if (not (vars := input("Enter variables (including exponents):\n"))):
-
-    #     raise ValueError("Invalid input.")
-    t1 = term("12", "z^7")
-    t2 = term("-6", "z^5")
-    t1.divide(t2)
-
-    print(t1.str_form())
-
-    t1.add(t2)
+    out = clean_exp(exp)
+    print(out)
 
 class term():
     """Data type to represent a product/quotient of fininite coefficients and variables.
@@ -27,12 +19,9 @@ class term():
         """Returns the term in its string form.
         """
         numerator = f"{self.coeff}{self.__convert_vars_to_str()}"
-        denominator = 1
 
-        if (isinstance(self.div, "term")):
+        if (isinstance(self.div, term)):
             denominator = f"{self.div.str_form()}"
-
-        if denominator != 1:
             return f"({numerator})/{denominator}"
 
         return f"{numerator}"
@@ -93,6 +82,12 @@ class term():
                     elif (self_expo == divisor.vars[v]):
                         del self.vars[v]
                         del divisor.vars[v]
+    
+    def __str__(self):
+        return self.str_form()
+    def __repr__(self):
+        return f"term(coeff={self.coeff}, vars={self.vars}, div={self.div})"
+        # return self.str_form()
 
 # Feature to turn an expression into a term class (WIP)
 # Ex: "5x^2" becomes a term class with ceoff = 5, var = {"x": 2}, div = 1.
@@ -154,10 +149,20 @@ def __parse_vars(exp: str) -> dict[str, int]:
 
     return dict(sorted(vars_d.items()))
 
-def parse_exp(exp: str):
-    coeff = __parse_coeff(exp)
-    vars = __parse_vars(exp)
-    div = __parse_div(exp)
+def parse_exp(exp: str) -> list[term]:
+    
+    terms_indices = __separate_terms(exp)
+    terms_l = []
+    for (start, end) in terms_indices:
+        curr_term = exp[start: end]
+
+        coeff = __parse_coeff(curr_term)
+        vars = __parse_vars(curr_term)
+        div = __parse_div(curr_term)
+        
+        terms_l.append(term(coeff, vars, div))
+
+    return terms_l
 
 def __parse_coeff(exp:str) -> int:
     """Turns the coefficient in the expression to an integer. Expression must be sorted.
@@ -173,10 +178,10 @@ def __parse_coeff(exp:str) -> int:
     exp_l = len(exp)
     coeff = ""
     for i in range(exp_l):
-        if exp[i].isalpha():
-            break
         if exp[i].isnumeric():
             coeff += exp[i]
+        else:
+            break
     return int(coeff)
 
 def __parse_div(exp: str):
@@ -185,11 +190,163 @@ def __parse_div(exp: str):
     if (i == -1):
         return 1
 
-    coeff = __parse_coeff(exp[i])
-    vars  = __parse_vars(exp[i])
+    coeff = __parse_coeff(exp[i+1])
+    vars  = __parse_vars(exp[i+1])
 
     t = term(coeff, vars)
     return t
+
+def __separate_terms(exp: str):
+    exp_l = len(exp)
+
+    terms = []
+    sub_term = []
+
+    start = 0
+    end = 0
+
+    for i in range(exp_l):
+        # At start of expression, append the starting term
+        if i == 0:
+            start = i
+            sub_term.append(start)
+
+        # In the middle, append the ending of the initial term,
+        # and append the new starting term
+        elif (exp[i] == "+") or (exp[i] == "-"):
+            start = end = i
+            sub_term.append(end)
+
+            if (len(sub_term) == 2):
+                terms.append(sub_term)
+
+                sub_term = []
+
+                sub_term.append(start)
+
+        # At the end, append the last term's substring
+        if i+1 == exp_l:
+            sub_term.append(exp_l)
+            terms.append(sub_term)
+
+    return terms
+
+def __rewrite_diff_to_neg(exp: str):
+    """Replaces all instances of subtraction as an addition of a negative number in the expression.
+
+    Example: `2-6` becomes `2+(-6)`.
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        New expression where all subtraction is an addition of a negative number.
+    """
+    exp_l = len(exp)
+    
+    new = ""
+    open_par = False
+
+    for i in range(exp_l):
+        curr = exp[i]
+
+        if i > 0:
+            if (open_par) and ((curr == "+") or (curr == "-")):
+                new += ")"
+                open_par = False
+
+            if (curr == "-") and exp[i-1].isalnum():
+                new += "+("
+                open_par = True
+        
+        new += curr
+
+        if (i+1 == exp_l) and open_par:
+            new += ")"
+            open_par = False
+
+    return new
+
+def __rewrite_neg_to_diff(exp: str) -> str:
+    """Rewrites addition of negative numbers as subtraction of positive numbers.
+
+    Example: `2+(-6)` becomes `2-6`.
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        The mathematical expression where all addition of negative numbers are rewritten as subtraction of positive numbers.
+    """
+    exp_l = len(exp)
+    
+    new = ""
+
+    i = 0
+    addend_2 = ""
+    while i < exp_l:
+        curr = exp[i]
+
+        if (curr == "+" and exp[i+1] == "(" and exp[i-1].isalnum()):
+            addend_2 += exp[i+2]
+            i += 3
+            continue
+
+        if (curr == ")") and (addend_2):
+            if ("-" in addend_2):
+                new += addend_2
+                addend_2 = ""
+                i += 1
+                continue
+
+        if (not addend_2):
+            new += curr
+        else:
+            addend_2 += curr
+
+        i += 1
+    return new
+
+def __rewrite_db_neg_to_pos(exp: str) -> str:
+    """Rewrites subtraction of a negative number as an addition of a positive number.
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        The mathematical expression but all instances of double negatives are replaced with addition of a positive number.
+    """
+    exp_l = len(exp)
+    
+    new = ""
+
+    i = 0
+
+    while i < exp_l:
+        curr = exp[i]
+
+        if (i > 0) and (i+3 < exp_l):
+            if (curr == "-" and exp[i+1: i+3] == "(-") and exp[i-1].isalnum():
+
+                new += f"+{exp[i+3]}"
+                i += 4
+                continue
+        
+        if not curr == ")":
+            new += curr
+
+        i += 1
+    return new
+
+def clean_exp(exp: str) -> str:
+    new = exp.replace(" ", "")
+    new = __rewrite_db_neg_to_pos(exp)
+    new = __rewrite_diff_to_neg(exp)
+
+    return new
+def __is_neg(exp: str) -> bool:
+    return "-" in exp
+
 # ---
 
 def __is_divisible(dividend: int, divisor: int) -> bool:
