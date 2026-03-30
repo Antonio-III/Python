@@ -1,3 +1,5 @@
+from _01_prealgebra import __pad_par, __rewrite_par
+
 # TODO: Add support for simplfiying variable terms (and exponents).
 # Ex: 1x + 2x = 3x and x^2 * x^3 = x^5.
 def main():
@@ -5,6 +7,7 @@ def main():
         raise ValueError("Invalid expression.")
 
     out = clean_exp(exp)
+    out = parse_exp_v2(out)
     print(out)
 
 class term():
@@ -164,6 +167,20 @@ def parse_exp(exp: str) -> list[term]:
 
     return terms_l
 
+def parse_exp_v2(exp: str) -> list[term]:
+    
+    terms = exp.split("+")
+    terms_l = []
+    for t in terms:
+        t = t.strip("()")
+        coeff = __parse_coeff(t)
+        vars = __parse_vars(t)
+        div = __parse_div(t)
+        
+        terms_l.append(term(coeff, vars, div))
+
+    return terms_l
+
 def __parse_coeff(exp:str) -> int:
     """Turns the coefficient in the expression to an integer. Expression must be sorted.
 
@@ -178,7 +195,7 @@ def __parse_coeff(exp:str) -> int:
     exp_l = len(exp)
     coeff = ""
     for i in range(exp_l):
-        if exp[i].isnumeric():
+        if exp[i].isnumeric() or exp[i] == "-" or exp[i] == "+":
             coeff += exp[i]
         else:
             break
@@ -231,6 +248,40 @@ def __separate_terms(exp: str):
 
     return terms
 
+
+def __separate_terms_v2(exp: str) -> list[str]:
+    i = 0
+    exp_l = len(exp)
+    terms_l = []
+    curr_t = ""
+
+    in_par = False
+
+    while (i < exp_l):
+        curr_c = exp[i]
+        if (curr_c == "+") and not in_par:
+
+            terms_l.append(curr_t)
+            curr_t = ""
+            i += 1
+            continue
+
+        elif curr_c == "(":
+            in_par = True
+
+        elif curr_c == ")":
+            in_par = False
+
+        curr_t += curr_c
+
+        if (i+1 == exp_l):
+            terms_l.append(curr_t)
+            curr_t = ""
+
+        i += 1
+
+    return terms_l
+
 def __rewrite_diff_to_neg(exp: str):
     """Replaces all instances of subtraction as an addition of a negative number in the expression.
 
@@ -247,7 +298,9 @@ def __rewrite_diff_to_neg(exp: str):
     new = ""
     open_par = False
 
-    for i in range(exp_l):
+    i = 0
+
+    while (i < exp_l):
         curr = exp[i]
 
         if i > 0:
@@ -258,13 +311,19 @@ def __rewrite_diff_to_neg(exp: str):
             if (curr == "-") and exp[i-1].isalnum():
                 new += "+("
                 open_par = True
-        
+                if exp[i+1] == "(":
+                    i += 1
+
         new += curr
+
+        if (curr == ")"):
+            open_par = False
 
         if (i+1 == exp_l) and open_par:
             new += ")"
             open_par = False
 
+        i += 1
     return new
 
 def __rewrite_neg_to_diff(exp: str) -> str:
@@ -332,16 +391,17 @@ def __rewrite_db_neg_to_pos(exp: str) -> str:
                 i += 4
                 continue
         
-        if not curr == ")":
-            new += curr
+
+        new += curr
 
         i += 1
     return new
 
 def clean_exp(exp: str) -> str:
     new = exp.replace(" ", "")
-    new = __rewrite_db_neg_to_pos(exp)
-    new = __rewrite_diff_to_neg(exp)
+    new = __rewrite_par(new)
+    new = __rewrite_db_neg_to_pos(new)
+    new = __rewrite_diff_to_neg(new)
 
     return new
 def __is_neg(exp: str) -> bool:

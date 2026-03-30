@@ -4,7 +4,7 @@ Example: f(4) = 1^2 + 2^2 + 3^3 + 4^4 = 30
 """
 from typing import Callable
 
-from const import MODES
+MODES = ["iter", "rec", "pyt"]
 
 def main() -> None:
     n = 4

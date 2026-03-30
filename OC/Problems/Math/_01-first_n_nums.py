@@ -14,11 +14,11 @@ def sum_first_n_nums(n: int) -> int:
     """
     An interface for the function. Change the function calls to execute various solutions.
     """
-    # return _sum_first_n_nums_iter(n)
-    # return _sum_first_n_nums_rec(n)
-    return _sum_first_n_nums_pyt(n)
+    # return _iter(n)
+    # return _rec(n)
+    return _pyt(n)
 
-def _sum_first_n_nums_iter(n: int) -> int:
+def _iter(n: int) -> int:
     """
     Iterative solution.
     """
@@ -29,16 +29,16 @@ def _sum_first_n_nums_iter(n: int) -> int:
 
     return sum
 
-def _sum_first_n_nums_rec(n: int) -> int:
+def _rec(n: int) -> int:
     """
     Recursive solution.
     """
     if n > 1:
-        return n + _sum_first_n_nums_rec(n-1)
+        return n + _rec(n-1)
     
     return 1
 
-def _sum_first_n_nums_pyt(n: int) -> int:
+def _pyt(n: int) -> int:
     """
     Pythonic solution.
     """

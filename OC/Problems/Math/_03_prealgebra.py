@@ -126,7 +126,9 @@ def __rewrite_var(exp: str, vars: list[str]) -> str:
     return exp
 
 def __rewrite_par(exp: str) -> str:
-    """Rewrites parentheses in the expression to represent multiplication (star sign).
+    """Rewrites parentheses in the expression to represent multiplication (if applicable).
+
+    Example: `2(5)` becomes `2*(5)`. But `1+(2)` remains as `1+(2)`.
 
     Args:
         exp: The mathematical expression.
