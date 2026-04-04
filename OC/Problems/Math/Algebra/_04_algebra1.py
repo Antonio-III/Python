@@ -1,4 +1,4 @@
-from _01_prealgebra import __pad_par, __rewrite_par
+from _03_prealgebra import __pad_par, __rewrite_par
 
 # TODO: Add support for simplfiying variable terms (and exponents).
 # Ex: 1x + 2x = 3x and x^2 * x^3 = x^5.
