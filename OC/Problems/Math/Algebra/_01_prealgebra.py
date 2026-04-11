@@ -229,8 +229,7 @@ def get_exps_btween_eqsigns(exp: str) -> tuple[list[str], list[str]]:
 
             if term:
                 terms.append(term)
-
-            term = ""
+                term = ""
 
         else:
             term += exp[i]
@@ -238,6 +237,10 @@ def get_exps_btween_eqsigns(exp: str) -> tuple[list[str], list[str]]:
         if len(sign) == 2:
             signs.append(sign)
             sign = ""
+
+        if (i+1) == exp_l:
+            terms.append(term)
+            term = ""
 
     return terms, signs
 
