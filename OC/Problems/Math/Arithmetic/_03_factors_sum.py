@@ -1,4 +1,4 @@
-from Algebra._05_gcf import find_factors
+from _04_gcf import find_factors
 
 def main() -> None:
     x = input("Enter quadratic coefficient and constant:\n").split()
@@ -23,7 +23,7 @@ def factors_sum(factors: list[int], x: int) -> tuple[int, int]:
         elif x < 0:
             if (f1 - f2 == x):
                 return (f1, -f2)
-            if (-f1 - f1 == x):
+            if (-f1 - f2 == x):
                 return (-f1, -f2)
 
     return (-1, -1)
