@@ -26,7 +26,7 @@ def main():
     
     print(f"Result: {res}")
 
-    if res:
+    if isinstance(res, int | float):
         print(f"Rounded {ROUND_TO} digits: {round(res, ROUND_TO)}")
 
 def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
@@ -143,12 +143,7 @@ def __rewrite_par(exp: str) -> str:
 
     for i in range(exp_l):
         # When encountering an opening parenthesis,
-        if (exp[i] == "(") and (i >= 1):
-            # if (exp[i-1] == "("):
-            # Add "1" before an opening parenthesis if the previous character is an opening parenthesis.
-            # I don't know why I added this feature, but it'll be gone for now.
-            #     new += "1"
-
+        if (exp[i] == "("):
             # Add a multiplication sign if the last character in the new string is a number.
             if (new[-1].isnumeric()):
                 new += "*"
