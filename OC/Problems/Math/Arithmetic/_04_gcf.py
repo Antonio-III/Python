@@ -13,7 +13,7 @@ def main():
         print(find_gcf(*num_list))
 
 def find_factors(n: int, unique: bool = True) -> list[int]:
-    """Find the factors of `n`.
+    """Find the factors of `|n|`.
 
     Args:
         n: An integer.
