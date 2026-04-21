@@ -26,8 +26,8 @@ def main():
     
     print(f"Result: {res}")
 
-    if isinstance(res, int | float):
-        print(f"Rounded {ROUND_TO} digits: {round(res, ROUND_TO)}")
+    if (type(res) != bool):
+        print(f"Rounded to {ROUND_TO} digits: {round(res, ROUND_TO)}")
 
 def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     """Rewrites the expression to be appropriate for passing into `eval`.
