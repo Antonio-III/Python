@@ -18,7 +18,8 @@ STR_ROUNDING = [
 
 def main() -> None:
     x = float(input("Enter number:\n"))
-    out = round(sqrt(x), NDIGITS)
-    print(f"√{x} (Nearest {STR_ROUNDING[NDIGITS-1]}) ≈ {out}")
+    out = sqrt(x)
+    print(f"√{x} = {out}")
+    print(f"Nearest {STR_ROUNDING[NDIGITS-1]} ≈ {round(out, NDIGITS)}")
 if __name__ == "__main__":
     main()
