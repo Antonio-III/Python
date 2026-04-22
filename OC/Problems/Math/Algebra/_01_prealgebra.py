@@ -145,7 +145,7 @@ def __rewrite_par(exp: str) -> str:
         # When encountering an opening parenthesis,
         if (exp[i] == "("):
             # Add a multiplication sign if the last character in the new string is a number.
-            if (new[-1].isnumeric()):
+            if (i > 0) and (new[-1].isnumeric()):
                 new += "*"
 
         # Add the current character to the new expression.
