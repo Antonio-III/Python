@@ -4,6 +4,8 @@ Docstring for OC.Problems.Math.Verify_Expression.01_prealgebra
 I wrote this script so I can verify my solutions to pre-algebra expressions.
 """
 
+from math import sqrt
+
 # N digits after the decimal point.
 ROUND_TO = 3+1
 
@@ -49,14 +51,23 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     # Replace variable terms with the found term (if possible).
     new = __plug_in_vars(new, vars, vals)
 
+
+    new = standardize_spec_cmds(new)
+
     # Replace lone equal signs with double equal signs.
     new = __rewrite_eq(new)
+
+    # Standardize brackets.
+    new = __standardize_pars(new)
 
     # Rewrite any lone variable like `x` to explicit multiplication like `1*x`.
     new = __rewrite_var(new, vars)
 
     # Replace caret characters with double-star signs (exponentiation).
     new = __rewrite_expo(new)
+
+    # Replaces square root symbol with sqrt function call
+    new = __rewrite_sqrt(new)
 
     # Rewrite the expression like `2(5)` to explicit multiplication like `2*(5)`. 
     new = __rewrite_par(new)
@@ -145,7 +156,7 @@ def __rewrite_par(exp: str) -> str:
         # When encountering an opening parenthesis,
         if (exp[i] == "("):
             # Add a multiplication sign if the last character in the new string is a number.
-            if (i > 0) and (new[-1].isnumeric()):
+            if (i > 0) and ((new[-1].isnumeric())):
                 new += "*"
 
         # Add the current character to the new expression.
@@ -303,6 +314,101 @@ def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
         exp = exp.replace(var, f"({val})")
 
     return exp
+
+def __rewrite_sqrt(exp: str) -> str:
+    """Rewrites all square root signs to a function call to `sqrt`. 
+
+    `sqrt`, when empty, roots the number 1. Be wary of this feature when passing in a variable whose value isn't plugged in.
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        The mathematical expression with all instances of square root symbols are replaced by literal `sqrt`.
+    """
+
+    new = ""
+    curr = 0
+    while ((sign := exp.find("√", curr)) != -1):
+        new += exp[curr:sign]
+
+
+        if exp[sign+1] != "(":
+            num = __get_num(exp, sign+1)
+        else:
+            num = __get_num(exp, sign+2)
+            curr += 2
+
+        new += f"(sqrt({num}))"
+        curr += sign + 1 + len(num)
+
+    if (curr < (exp_l:=len(exp)) ):
+        new += exp[curr: exp_l]
+
+    return new
+
+
+def __get_num(exp: str, i: int) -> str:
+    """Returns the number starting at the index `i`.
+
+    Args:
+        exp: The mathematical expression.
+        i: Starting point of the number.
+    """
+    num = ""
+    for c in exp[i::]:
+        if c.isnumeric() or (c == "."):
+            num += c
+        else:
+            break
+    return num
+
+def __standardize_pars(exp: str) -> str:
+    """Replaces curly- and L-brackets with parentheses.
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        The mathemematical expression but all its brackets are now parentheses.
+    """
+    OP = "("
+    ED = ")"
+
+    new = exp
+
+    new = new.replace("{", OP).replace("}", ED)
+    new = new.replace("[", OP).replace("]", ED)
+
+    return new
+
+def __check_unplugged_vars(exp: str): 
+    for i in range(len(exp)):
+        try:
+            assert not (exp[i].isalpha())
+        except AssertionError as e:
+            error_message = f"Variable with unknown value: {exp[0:i+1]}"
+            syntax_error = "SyntaxError: "
+            raise SyntaxError(f"{error_message}\n{'~' * (len(syntax_error) + len(error_message) - 1)}^") from e
+
+def standardize_spec_cmds(exp: str) -> str:
+    """Changes commands (the ones starting with a back-slash) to a character (typically representing the mathematical symbol for that command).
+
+    The syntax of these commands follow how they are represented in Latex.
+
+    This function cleans the input so that these commands don't raise an error when checking for unplugged variables.
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        The mathematical expression with all back-slash commands replaced with a special symbol.
+    """
+    # Rooting: "\\sqrt" -> "√"
+    new = exp.replace("\\sqrt", "√")
+
+    __check_unplugged_vars(new)
+    return new
 
 if __name__ == "__main__":
     main()
