@@ -54,11 +54,11 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
     new = standardize_spec_cmds(new)
 
-    # Replace lone equal signs with double equal signs.
-    new = __rewrite_eq(new)
-
     # Standardize brackets.
     new = __standardize_pars(new)
+
+    # Replace lone equal signs with double equal signs.
+    new = __rewrite_eq(new)
 
     # Rewrite any lone variable like `x` to explicit multiplication like `1*x`.
     new = __rewrite_var(new, vars)
@@ -334,9 +334,9 @@ def __rewrite_sqrt(exp: str) -> str:
 
 
         if exp[sign+1] != "(":
-            num = __get_num(exp, sign+1)
+            num = __get_exp(exp, sign+1)
         else:
-            num = __get_num(exp, sign+2)
+            num = __get_exp(exp, sign+2)
             curr += 2
 
         new += f"(sqrt({num}))"
@@ -348,20 +348,25 @@ def __rewrite_sqrt(exp: str) -> str:
     return new
 
 
-def __get_num(exp: str, i: int) -> str:
+def __get_exp(exp: str, i: int) -> str:
     """Returns the number starting at the index `i`.
 
     Args:
         exp: The mathematical expression.
         i: Starting point of the number.
     """
-    num = ""
+    sub_exp = ""
+    op = 0
     for c in exp[i::]:
-        if c.isnumeric() or (c == "."):
-            num += c
-        else:
-            break
-    return num
+        if (c == "("):
+            op += 1
+        elif (c == ")"):
+            op -= 1
+            if op == -1:
+                break
+
+        sub_exp += c
+    return sub_exp
 
 def __standardize_pars(exp: str) -> str:
     """Replaces curly- and L-brackets with parentheses.
