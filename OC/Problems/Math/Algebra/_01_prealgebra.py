@@ -331,15 +331,10 @@ def __rewrite_sqrt(exp: str) -> str:
     while ((sign := exp.find("√", curr)) != -1):
         new += exp[curr:sign]
 
-
-        if exp[sign+1] != "(":
-            num = __get_exp(exp, sign+1)
-        else:
-            num = __get_exp(exp, sign+2)
-            curr += 2
+        num = __get_sub_exp(exp, sign+1)
 
         new += f"(sqrt({num}))"
-        curr += sign + 1 + len(num)
+        curr = sign + 1 + len(num)
 
     if (curr < (exp_l:=len(exp)) ):
         new += exp[curr: exp_l]
@@ -347,16 +342,19 @@ def __rewrite_sqrt(exp: str) -> str:
     return new
 
 
-def __get_exp(exp: str, i: int) -> str:
-    """Returns the number starting at the index `i`.
+def __get_sub_exp(exp: str, i: int) -> str:
+    """Returns the sub-expression starting at the index `i`.
 
     Args:
         exp: The mathematical expression.
         i: Starting point of the number.
     """
-    sub_exp = ""
-    op = 0
-    for c in exp[i::]:
+    if exp[i] != "(":
+        return __get_num(exp, i)
+
+    sub_exp = "("
+    op = 1
+    for c in exp[i+1::]:
         if (c == "("):
             op += 1
         elif (c == ")"):
@@ -364,10 +362,25 @@ def __get_exp(exp: str, i: int) -> str:
 
         sub_exp += c
 
-        if op == -1:
+        if op == 0:
                 break
 
     return sub_exp
+
+def __get_num(exp: str, i: int) -> str:
+    """Returns the number starting at index `i`.
+
+    Args:
+        exp: The mathematical expression.
+        i: Starting position (0-indexed).
+    """
+    num = ""
+    for c in exp[i::]:
+        if (c.isnumeric()) or (c == "."):
+            num += c
+        else:
+            break
+    return num
 
 def __standardize_pars(exp: str) -> str:
     """Replaces curly- and L-brackets with parentheses.
