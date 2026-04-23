@@ -51,7 +51,6 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     # Replace variable terms with the found term (if possible).
     new = __plug_in_vars(new, vars, vals)
 
-
     new = standardize_spec_cmds(new)
 
     # Standardize brackets.
@@ -362,10 +361,12 @@ def __get_exp(exp: str, i: int) -> str:
             op += 1
         elif (c == ")"):
             op -= 1
-            if op == -1:
-                break
 
         sub_exp += c
+
+        if op == -1:
+                break
+
     return sub_exp
 
 def __standardize_pars(exp: str) -> str:
