@@ -10,9 +10,7 @@ from math import sqrt
 ROUND_TO = 3+1
 
 def main():
-    exp = input("Enter expression:\n")
-    var_c = input("Enter variable character/s:\n").split()
-    val = input("Enter found value/s:\n").split()
+    exp, var_c, val = get_inputs()
 
     new = rewrite(exp, var_c, val)
 
@@ -428,6 +426,58 @@ def standardize_spec_cmds(exp: str) -> str:
 
     __check_unplugged_vars(new)
     return new
+
+def get_inputs() -> tuple[str, list[str], list[str]]:
+    exp = input("Enter expression:\n")
+    var_c = input("Enter variable character/s:\n").split()
+    val = input("Enter found value/s:\n").split()
+
+    val = __standardize_val(val)
+    val = __pad_found_val(val)
+
+    notify_updated_vals(val)
+
+    return exp, var_c, val
+
+def __pad_found_val(val: list[str]) -> list[str]:
+    """Fixes the input by correcting imbalanced parenthesis count.
+
+    Sometimes I write my inputs improperly. Instead of fixing my inputs, I decided to let the script fix it for me.
+
+    Args:
+        val: A list of potential value/s for the variable/s.
+
+    Returns:
+        `val`, but their parentheses count is corrected.
+    """
+    new_val = []
+    for exp in val:
+        new = __pad_par(exp)
+        new_val.append(new)
+    
+    return new_val
+
+def __standardize_val(val: list[str]) -> list[str]:
+    """Replace curly brackets with parentheses.
+
+    Args:
+        val: A list of potential value/s for the variable/s.
+
+    Returns:
+        `val`, but curly brackets are replaced with parentheses.
+    """
+    new_val = []
+    for exp in val:
+        new = exp.replace("{", "(").replace("}", ")")
+        new_val.append(new)
+
+    return new_val
+
+def notify_updated_vals(val: list[str]) -> None:
+    print("Variable values updated to:")
+    for exp in val:
+        print(f"{exp}\n")
+
 
 if __name__ == "__main__":
     main()
