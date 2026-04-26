@@ -1,6 +1,4 @@
 """
-Docstring for OC.Problems.Math.Verify_Expression.01_prealgebra
-
 I wrote this script so I can verify my solutions to pre-algebra expressions.
 """
 
@@ -8,6 +6,7 @@ from math import sqrt
 
 # N digits after the decimal point.
 ROUND_TO = 3+1
+SPEC_CHAR = "?"
 
 def main():
     exp, var_c, val = get_inputs()
@@ -49,10 +48,10 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     # Replace variable terms with the found term (if possible).
     new = __plug_in_vars(new, vars, vals)
 
-    new = standardize_spec_cmds(new)
-
     # Standardize brackets.
-    new = __standardize_pars(new)
+    new = __replace_brackets(new)
+
+    new = replace_spec_cmds(new)
 
     # Replace lone equal signs with double equal signs.
     new = __rewrite_eq(new)
@@ -63,11 +62,10 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     # Replace caret characters with double-star signs (exponentiation).
     new = __rewrite_expo(new)
 
-    # Replaces square root symbol with sqrt function call
-    new = __rewrite_sqrt(new)
-
     # Rewrite the expression like `2(5)` to explicit multiplication like `2*(5)`. 
     new = __rewrite_par(new)
+
+    __check_unplugged_vars(new)
 
     return new
 
@@ -172,7 +170,7 @@ def __rewrite_par(exp: str) -> str:
     return new
 
 def __pad_par(exp: str) -> str:
-    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. 
+    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. The input assumes that all brackets are converted to parentheses.
 
     This allows evaluation support even if the user passes an expression with partial parentheses.
 
@@ -299,7 +297,6 @@ def __rewrite_expo(exp: str) -> str:
     new = exp.replace("^", "**")
     return new
 
-
 def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
     if (not vars_) or (not vals_):
         return exp
@@ -312,40 +309,40 @@ def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
 
     return exp
 
-def __rewrite_sqrt(exp: str) -> str:
-    """Rewrites all square root signs to a function call to `sqrt`. 
+def __replace_sqrt(exp: str) -> str:
+    """Replaces all square root commands to a function call to `math.sqrt`. 
 
-    `sqrt`, when empty, roots the number 1. Be wary of this feature when passing in a variable whose value isn't plugged in.
+    `sqrt`, when empty, roots the number 1.
 
     Args:
         exp: The mathematical expression.
 
     Returns:
-        The mathematical expression with all instances of square root symbols are replaced by literal `sqrt`.
+        The mathematical expression with all instances of square root commands replaced function calls to `sqrt`.
     """
+    exp = exp.replace("\\sqrt", SPEC_CHAR)
 
     new = ""
-    curr = 0
-    while ((sign := exp.find("√", curr)) != -1):
-        new += exp[curr:sign]
+    i = 0
+    while ((sign := exp.find(SPEC_CHAR, i)) != -1):
+        new += exp[i:sign]
 
         num = __get_sub_exp(exp, sign+1)
 
         new += f"(sqrt({num}))"
-        curr = sign + 1 + len(num)
+        i = sign + 1 + len(num)
 
-    if (curr < (exp_l:=len(exp)) ):
-        new += exp[curr: exp_l]
+    if (i < (exp_l:=len(exp)) ):
+        new += exp[i: exp_l]
 
     return new
 
-
 def __get_sub_exp(exp: str, i: int) -> str:
-    """Returns the sub-expression starting at the index `i`.
+    """Returns the sub-expression starting at the index `i`. The sub expression can be a number (whole, fractional, decimal) or an expression that starts and stops with a parenthesis.
 
     Args:
         exp: The mathematical expression.
-        i: Starting point of the number.
+        i: Starting point of the sub-expression.
     """
     if exp[i] != "(":
         return __get_num(exp, i)
@@ -380,7 +377,7 @@ def __get_num(exp: str, i: int) -> str:
             break
     return num
 
-def __standardize_pars(exp: str) -> str:
+def __replace_brackets(exp: str) -> str:
     """Replaces curly- and L-brackets with parentheses.
 
     Args:
@@ -394,37 +391,24 @@ def __standardize_pars(exp: str) -> str:
 
     new = exp
 
+    new = correct_exp_in_spec_commands(new)
+
     new = new.replace("{", OP).replace("}", ED)
     new = new.replace("[", OP).replace("]", ED)
 
     return new
 
-def __check_unplugged_vars(exp: str): 
-    for i in range(len(exp)):
-        try:
-            assert not (exp[i].isalpha())
-        except AssertionError as e:
-            error_message = f"Variable with unknown value: {exp[0:i+1]}"
-            syntax_error = "SyntaxError: "
-            raise SyntaxError(f"{error_message}\n{'~' * (len(syntax_error) + len(error_message) - 1)}^") from e
-
-def standardize_spec_cmds(exp: str) -> str:
-    """Changes commands (the ones starting with a back-slash) to a character (typically representing the mathematical symbol for that command).
-
-    The syntax of these commands follow how they are represented in Latex.
-
-    This function cleans the input so that these commands don't raise an error when checking for unplugged variables.
+def replace_spec_cmds(exp: str) -> str:
+    """Changes commands (the ones starting with a back-slash) to a a value that can be evaluated on. For instance, \\sqrt becomes a function call instead.
 
     Args:
         exp: The mathematical expression.
 
     Returns:
-        The mathematical expression with all back-slash commands replaced with a special symbol.
+        The mathematical expression with all back-slash commands replaced with its proper notation.
     """
-    # Rooting: "\\sqrt" -> "√"
-    new = exp.replace("\\sqrt", "√")
-
-    __check_unplugged_vars(new)
+    new = __replace_sqrt(exp)
+    new = __replace_frac(new)
     return new
 
 def get_inputs() -> tuple[str, list[str], list[str]]:
@@ -432,17 +416,19 @@ def get_inputs() -> tuple[str, list[str], list[str]]:
     var_c = input("Enter variable character/s:\n").split()
     val = input("Enter found value/s:\n").split()
 
-    val = __standardize_val(val)
+    # Input cleaning
+    val = __replace_brackets_val(val)
     val = __pad_found_val(val)
 
-    notify_updated_vals(val)
+    notify_updated_val(val)
+    # ---
 
     return exp, var_c, val
 
 def __pad_found_val(val: list[str]) -> list[str]:
     """Fixes the input by correcting imbalanced parenthesis count.
 
-    Sometimes I write my inputs improperly. Instead of fixing my inputs, I decided to let the script fix it for me.
+    Sometimes I write my inputs improperly. Instead of fixing my inputs, I decided to let the script fix it for me. For instance, writing `\\frac{2}{3` is changed to `\\frac{2}{3}`.
 
     Args:
         val: A list of potential value/s for the variable/s.
@@ -457,7 +443,7 @@ def __pad_found_val(val: list[str]) -> list[str]:
     
     return new_val
 
-def __standardize_val(val: list[str]) -> list[str]:
+def __replace_brackets_val(val: list[str]) -> list[str]:
     """Replace curly brackets with parentheses.
 
     Args:
@@ -468,16 +454,89 @@ def __standardize_val(val: list[str]) -> list[str]:
     """
     new_val = []
     for exp in val:
-        new = exp.replace("{", "(").replace("}", ")")
-        new_val.append(new)
+        new = __replace_brackets(exp)
+
+        try:
+            eval(new)
+        except SyntaxError as e:
+            msg = err_msg("ValueError", f"Invalid number: {new}", new)
+            raise ValueError(msg) from e
+        else:
+            new_val.append(new)
 
     return new_val
 
-def notify_updated_vals(val: list[str]) -> None:
+def notify_updated_val(val: list[str]) -> None:
+    """Prints the updated values in `val`.
+
+    Args:
+        val: A list of potential value/s for the variable/s.
+    """
     print("Variable values updated to:")
     for exp in val:
-        print(f"{exp}\n")
+        print(f"{exp}")
 
+def __replace_frac(exp: str):
+    exp = exp.replace("\\frac", SPEC_CHAR)
+
+    new = ""
+    i = 0
+    while ((sign := exp.find(SPEC_CHAR, i)) != -1):
+        new += exp[i:sign]
+        
+        num = __get_sub_exp(exp, sign+1)
+        i = sign + 1 + len(num)
+
+        den = __get_sub_exp(exp, i)
+        i += len(den)
+
+        new += f"{num}/{den}"
+
+    if (i < (exp_l:=len(exp)) ):
+        new += exp[i: exp_l]
+
+    return new
+
+def __check_unplugged_vars(exp: str) -> None:
+    # Replace all function calls to a special character.
+    temp = exp
+    temp = temp.replace("sqrt", SPEC_CHAR*len("sqrt"))
+
+    for i in range(len(temp)):
+        try:
+            assert not (temp[i].isalpha())
+        except AssertionError as e:
+            _msg = f"Variable with unknown value: {temp}"
+            msg = err_msg("ValueError", _msg, exp, i, True)
+            raise ValueError(msg) from e
+
+def err_msg(err: str, msg: str, exp: str, i: int=0, char: bool=False) -> str:
+    padding = len(err) + 2 + len(msg) - (len(exp) - i - 1) - 1
+    caret = '^' * (1 if char else len(exp[i::]))
+
+    return f"{msg}\n{'~' * padding}{caret}"
+
+def correct_exp_in_spec_commands(exp: str):
+    """Correct the parentheses count of the expression inside the curly brackets of special commands.
+
+    Args:
+        exp: The mathematical expression that contains special commands.
+    """
+    start = stop = i = 0
+    new = ""
+
+    while ( ((start:= exp.find("{", start)) != -1) and ((stop:= exp.find("}", stop)) != -1) ):
+        new += exp[i: start]
+        new += __pad_par(exp[start: stop+1])
+        i = (stop + 1) + 1
+        
+        start += 1
+        stop += 1
+
+    if i < (exp_l:= len(exp)):
+        new += exp[i: exp_l]
+
+    return new
 
 if __name__ == "__main__":
     main()
