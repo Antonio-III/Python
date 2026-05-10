@@ -304,8 +304,12 @@ def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
     if len(vals_) != len(vars_):
         raise ValueError(f"Expected ({vars_}) values but ({vals_}) plugged.")
 
+    mapped = {}
     for var, val in zip(vars_, vals_):
-        exp = exp.replace(var, f"({val})")
+        mapped[var] = val
+    
+    for val in sorted(mapped, reverse=True):
+        exp = exp.replace(val, f"({mapped[val]})")
 
     return exp
 
@@ -528,7 +532,7 @@ def correct_exp_in_spec_commands(exp: str):
     while ( ((start:= exp.find("{", start)) != -1) and ((stop:= exp.find("}", stop)) != -1) ):
         new += exp[i: start]
         new += __pad_par(exp[start: stop+1])
-        i = (stop + 1) + 1
+        i = stop + 1
         
         start += 1
         stop += 1
