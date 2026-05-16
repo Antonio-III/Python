@@ -170,7 +170,9 @@ def __rewrite_par(exp: str) -> str:
     return new
 
 def __pad_par(exp: str) -> str:
-    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. The input assumes that all brackets are converted to parentheses.
+    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. 
+
+    **The input assumes that all brackets are converted to parentheses.**
 
     This allows evaluation support even if the user passes an expression with partial parentheses.
 
@@ -301,8 +303,8 @@ def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
     if (not vars_) or (not vals_):
         return exp
 
-    if len(vals_) != len(vars_):
-        raise ValueError(f"Expected ({vars_}) values but ({vals_}) plugged.")
+    if (len_vals:=len(vals_)) != (len_vars:=len(vars_)):
+        raise ValueError(f"Expected {len_vals} variables values but {len_vars} plugged.")
 
     mapped = {}
     for var, val in zip(vars_, vals_):
@@ -421,52 +423,21 @@ def get_inputs() -> tuple[str, list[str], list[str]]:
     val = input("Enter found value/s:\n").split()
 
     # Input cleaning
-    val = __replace_brackets_val(val)
-    val = __pad_found_val(val)
-
+    val = clean_val(val)
     notify_updated_val(val)
     # ---
 
     return exp, var_c, val
 
-def __pad_found_val(val: list[str]) -> list[str]:
-    """Fixes the input by correcting imbalanced parenthesis count.
-
-    Sometimes I write my inputs improperly. Instead of fixing my inputs, I decided to let the script fix it for me. For instance, writing `\\frac{2}{3` is changed to `\\frac{2}{3}`.
-
-    Args:
-        val: A list of potential value/s for the variable/s.
-
-    Returns:
-        `val`, but their parentheses count is corrected.
-    """
+def clean_val(val: list[str]) -> list[str]:
     new_val = []
-    for exp in val:
-        new = __pad_par(exp)
+
+    for v in val:
+        new = __replace_brackets(v)
+        new = __pad_par(new)
+        new = replace_spec_cmds(new)
+
         new_val.append(new)
-    
-    return new_val
-
-def __replace_brackets_val(val: list[str]) -> list[str]:
-    """Replace curly brackets with parentheses.
-
-    Args:
-        val: A list of potential value/s for the variable/s.
-
-    Returns:
-        `val`, but curly brackets are replaced with parentheses.
-    """
-    new_val = []
-    for exp in val:
-        new = __replace_brackets(exp)
-
-        try:
-            eval(new)
-        except SyntaxError as e:
-            msg = err_msg("ValueError", f"Invalid number: {new}", new)
-            raise ValueError(msg) from e
-        else:
-            new_val.append(new)
 
     return new_val
 
