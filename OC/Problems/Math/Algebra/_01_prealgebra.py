@@ -8,6 +8,9 @@ from math import sqrt
 ROUND_TO = 3+1
 SPEC_CHAR = "?"
 
+SPEC_CMDS = ["\\sqrt", "\\frac"]
+SPEC_CMDS_FUNC = ["sqrt"]
+
 def main():
     exp, var_c, val = get_inputs()
 
@@ -41,28 +44,16 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
         The new expression is passable to the `eval` function for evaluation.
     """
+    new = exp
 
-    # Remove whitespaces from expression.
-    new = exp.replace(" ", "")
-
-    # Replace variable terms with the found term (if possible).
     new = __plug_in_vars(new, vars, vals)
 
-    # Standardize brackets.
-    new = __replace_brackets(new)
+    new = rewrite_exp(new)
 
     new = replace_spec_cmds(new)
 
-    # Replace lone equal signs with double equal signs.
-    new = __rewrite_eq(new)
-
-    # Rewrite any lone variable like `x` to explicit multiplication like `1*x`.
-    new = __rewrite_var(new, vars)
-
-    # Replace caret characters with double-star signs (exponentiation).
-    new = __rewrite_expo(new)
-
-    # Rewrite the expression like `2(5)` to explicit multiplication like `2*(5)`. 
+    # This is the only way to represent multiplication because I want this script to 
+    # support multi-character variables.
     new = __rewrite_par(new)
 
     __check_unplugged_vars(new)
@@ -92,8 +83,11 @@ def __rewrite_eq(exp: str) -> str:
 
 def __rewrite_var(exp: str, vars: list[str]) -> str:
     """
-    Rewrites the expression but explicitly adding a `1*` to any lone variable term.
+    **DEPRECATED**
 
+    Rewrites the expression but explicitly adding a multiplication sign to any lone variable term.
+
+    For instance, `x` becomes `1*x` and `3y` becomes `3*y`.
     Suppports variable terms longer than a single character.
 
     Args:
@@ -107,6 +101,8 @@ def __rewrite_var(exp: str, vars: list[str]) -> str:
     if not vars:
         return exp
 
+    new = exp
+
     # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
     # Loop through the list of variables.
     for v in vars:
@@ -115,26 +111,28 @@ def __rewrite_var(exp: str, vars: list[str]) -> str:
         v_l = len(v)
 
         # Find the first instance of the current variable.
-        next = exp.find(v, i)
+        next = new.find(v, i)
         while (next != -1):
 
-            temp += exp[i: next]
-            if (next == 0) or (exp[i-1] == "-") or not (exp[i-1].isnumeric()):
+            temp += new[i: next]
+            if (next == 0) or (new[i-1] == "-") or not (new[i-1].isnumeric()):
                 temp += "1"
 
             temp += f"*{v}"
             i = next + v_l
-            next = exp.find(v, i)
-        # After exhausting the variable, replace the original expression with the new expression. `new` variable is reserved for the output of this function.
-        temp += exp[i: len(exp)]
-        exp = temp
+            next = new.find(v, i)
 
-    return exp
+        temp += exp[i: len(exp)]
+        new = temp
+
+    return new
 
 def __rewrite_par(exp: str) -> str:
     """Rewrites parentheses in the expression to represent multiplication (if applicable).
 
     Example: `2(5)` becomes `2*(5)`. But `1+(2)` remains as `1+(2)`.
+
+    Is used AFTER plugging in variables.
 
     Args:
         exp: The mathematical expression.
@@ -300,19 +298,38 @@ def __rewrite_expo(exp: str) -> str:
     return new
 
 def __plug_in_vars(exp: str, vars_: list[str], vals_: list[str]) -> str:
+    """Plugs in the values for the inputted variables.
+
+    _extended_summary_
+
+    Args:
+        exp: _description_
+        vars_: _description_
+        vals_: _description_
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _description_
+    """
     if (not vars_) or (not vals_):
         return exp
 
     if (len_vals:=len(vals_)) != (len_vars:=len(vars_)):
         raise ValueError(f"Expected {len_vals} variables values but {len_vars} plugged.")
 
+    # Associate the variables with their values.
+    # This allows variables like `a` and and `aa` to be distinct.
     mapped = {}
     for var, val in zip(vars_, vals_):
         mapped[var] = val
     
+    masked = mask_spec_cmds(exp)
     for val in sorted(mapped, reverse=True):
-        exp = exp.replace(val, f"({mapped[val]})")
+        masked = masked.replace(val, f"({mapped[val]})")
 
+    exp = merge_mask(exp, masked)
     return exp
 
 def __replace_sqrt(exp: str) -> str:
@@ -326,7 +343,7 @@ def __replace_sqrt(exp: str) -> str:
     Returns:
         The mathematical expression with all instances of square root commands replaced function calls to `sqrt`.
     """
-    exp = exp.replace("\\sqrt", SPEC_CHAR)
+    exp = mask_spec_cmds(exp, "sqrt")
 
     new = ""
     i = 0
@@ -344,7 +361,7 @@ def __replace_sqrt(exp: str) -> str:
     return new
 
 def __get_sub_exp(exp: str, i: int) -> str:
-    """Returns the sub-expression starting at the index `i`. The sub expression can be a number (whole, fractional, decimal) or an expression that starts and stops with a parenthesis.
+    """Returns the sub-expression starting at the index `i`. The sub expression can be a number (whole or decimal) or an expression that starts and stops with a parenthesis.
 
     Args:
         exp: The mathematical expression.
@@ -396,8 +413,6 @@ def __replace_brackets(exp: str) -> str:
     ED = ")"
 
     new = exp
-
-    new = correct_exp_in_spec_commands(new)
 
     new = new.replace("{", OP).replace("}", ED)
     new = new.replace("[", OP).replace("]", ED)
@@ -451,8 +466,8 @@ def notify_updated_val(val: list[str]) -> None:
     for exp in val:
         print(f"{exp}")
 
-def __replace_frac(exp: str):
-    exp = exp.replace("\\frac", SPEC_CHAR)
+def __replace_frac(exp: str) -> str:
+    exp = mask_spec_cmds(exp, "frac")
 
     new = ""
     i = 0
@@ -475,7 +490,7 @@ def __replace_frac(exp: str):
 def __check_unplugged_vars(exp: str) -> None:
     # Replace all function calls to a special character.
     temp = exp
-    temp = temp.replace("sqrt", SPEC_CHAR*len("sqrt"))
+    temp = mask_func_calls(temp, eq_len=True)
 
     for i in range(len(temp)):
         try:
@@ -486,13 +501,29 @@ def __check_unplugged_vars(exp: str) -> None:
             raise ValueError(msg) from e
 
 def err_msg(err: str, msg: str, exp: str, i: int=0, char: bool=False) -> str:
+    """Error message formatter.
+
+    The error message shows where in the expression did the error occur.
+
+    Args:
+        err: String literal for the name of the error (Per Python).
+        msg: The error message (Per Python).
+        exp: The mathematical expression.
+        i: The index for where the error occurred. Defaults to 0.
+        char: Flag for whether the error is a character or a sub-expression. Defaults to False.
+
+    Returns:
+        The formatted error message.
+    """
     padding = len(err) + 2 + len(msg) - (len(exp) - i - 1) - 1
     caret = '^' * (1 if char else len(exp[i::]))
 
     return f"{msg}\n{'~' * padding}{caret}"
 
-def correct_exp_in_spec_commands(exp: str):
+def correct_exp_in_spec_commands(exp: str) -> str:
     """Correct the parentheses count of the expression inside the curly brackets of special commands.
+
+    **The input is assumed to contain curly brackets for special commands.**
 
     Args:
         exp: The mathematical expression that contains special commands.
@@ -512,6 +543,110 @@ def correct_exp_in_spec_commands(exp: str):
         new += exp[i: exp_l]
 
     return new
+
+
+def mask_spec_cmds(exp: str, cmd: str = "", eq_len: bool = False) -> str:
+    """Replaces special commands with a question mark character (`?`).
+
+    **The input is assumed to have the correct amount of parentheses.**
+
+    Args:
+        exp: The mathematical expression that contains a special command.
+        cmd: The command that will be masked. If cmd is not given, then all commands will be masked.
+        eq_len: Flag for whether the mask will be as long as the length of the special command (excluding its brackets). The mask is 1 character by default.
+
+    Returns:
+        The new expression with all special commands replaced with `?`.
+    """
+    if not cmd:
+        for cmd_ in SPEC_CMDS:
+            len_ = len(cmd) if eq_len else 1
+            exp = exp.replace(cmd_, SPEC_CHAR*len_)
+        return exp
+
+    len_ = (len(cmd)+2) if eq_len else 1
+    return exp.replace(f"\\{cmd}", SPEC_CHAR)
+
+def mask_func_calls(exp: str, eq_len: bool = False) -> str:
+    """Replace function calls (only its characters) with a question mark (`?`).
+
+    **The input is assumed to have the correct amount of parentheses.**
+
+    This allows having variables that use the same characters as the special commands. For instance, `t` can be a variable even when `sqrt` is in the expression.
+
+    Args:
+        exp: The mathematical expression containing function calls.
+        eq_len: Flag for whether the mask will be as long as the length of the special command (excluding its brackets). The mask is 1 character long by default.
+
+    Returns:
+        The mathematical expression but all its function calls are hidden.
+    """
+    for f in SPEC_CMDS_FUNC:
+        len_ = len(f) if eq_len else 1
+        exp = exp.replace(f, SPEC_CHAR*len_)
+    return exp
+
+def merge_mask(exp: str, exp_masked: str) -> str:
+    """Updates the mathematical expression with the plugged values.
+
+    This function was created so that inputs like `\\sqrt4+t`, `t=1` does not become `\\sqr(1)+(1)`.
+    Args:
+        exp: The mathematical expression.
+        exp_masked: The masked mathematical expression (special commands are hidden).
+
+    Returns:
+        An updated expression where all plugged values and special commands are in a single expression.
+    """
+    new = ""
+    for i in range(len(exp_masked)):
+        if (exp_masked[i] == SPEC_CHAR):
+            cmd = __get_nearest_cmd(exp, i)
+            new += cmd
+            continue
+        new += exp_masked[i]
+
+    return new
+
+
+def rewrite_exp(exp: str) -> str:
+    """Processes the mathematical expression so that its notation is clear for Python evaluation.
+
+    Args:
+        exp: The mathematical expression.
+
+    Returns:
+        The mathematical expression but it's notation is standardized.
+    """
+    # Remove whitespaces from expression.
+    new = exp.replace(" ", "")
+
+    new = correct_exp_in_spec_commands(new)
+
+    # Standardize brackets.
+    new = __replace_brackets(new)
+
+    # Replace lone equal signs with double equal signs.
+    new = __rewrite_eq(new)
+
+    # Replace caret characters with double-star signs (exponentiation).
+    new = __rewrite_expo(new)
+
+    return new
+
+def __get_nearest_cmd(exp: str, i: int) -> str:
+    j = 0
+    cmd = ""
+    for cmd_ in SPEC_CMDS:
+        if (k := exp.find(cmd_, i)) != -1:
+            if (j == 0):
+                j = k
+                cmd = cmd_
+            elif (k < j):
+                j = k
+                cmd = cmd_
+    return cmd
+
+
 
 if __name__ == "__main__":
     main()
