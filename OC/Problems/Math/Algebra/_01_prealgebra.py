@@ -22,7 +22,7 @@ def main():
     terms, signs = get_exps_btween_eqsigns(new)
     
     if not signs:
-        res = eval_exp_no_sign(new)
+        res = eval(new)
     else:
         res = eval_exp_signs(terms, signs)
     
@@ -44,7 +44,17 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
         The new expression is passable to the `eval` function for evaluation.
     """
-    new = exp
+    exp = __rewrite_eq(exp)
+
+    terms, signs = get_exps_btween_eqsigns(exp)
+
+    terms_new = []
+    for term in terms:
+        term = __pad_par(term)
+        terms_new.append(term)
+
+    new = "".join([f"{t}" + s for t, s in zip(terms_new, signs)])
+    new += terms_new[-1]
 
     new = __plug_in_vars(new, vars, vals)
 
@@ -132,7 +142,7 @@ def __rewrite_par(exp: str) -> str:
 
     Example: `2(5)` becomes `2*(5)`. But `1+(2)` remains as `1+(2)`.
 
-    **Is used after plugging in variables.**
+    **Assumes the variables have been plugged in and has correct parentheses.**
 
     Args:
         exp: The mathematical expression.
@@ -140,7 +150,6 @@ def __rewrite_par(exp: str) -> str:
     Returns:
         The mathematical expression with all parentheses rewritten as multiplication.
     """
-    exp = __pad_par(exp)
     exp_l = len(exp)
 
     new = ""
@@ -262,19 +271,19 @@ def eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
     for i in range(len(terms)):
         print(f"Term {i+1}: {eval_terms[i]}")
 
-    # Join the lists together to a new expression. Note the amount of terms is always 1 number higher than the amount of signs.
+    # Join the lists together to a new expression. The amount of terms is always 1 number higher than the amount of signs.
     new = "".join([f"{t}" + s for t, s in zip(eval_terms, signs)])
 
     # After joining both lists, add the last term.
     new += terms[-1]
 
     # Evaluate the expression and return the result.
-    res = eval(new)
-
-    return res
+    return eval(new)
 
 def eval_exp_no_sign(exp: str) -> int | float:
-    """Evaluation process for when the expression has no eq/inequality sign.
+    """**DEPRECATED**
+
+    Evaluation process for when the expression has no eq/inequality sign.
 
     Args:
         exp: The mathematical expression.
@@ -648,9 +657,6 @@ def clean_exp(exp: str) -> str:
 
     # Standardize brackets.
     new = __replace_brackets(new)
-
-    # Replace lone equal signs with double equal signs.
-    new = __rewrite_eq(new)
 
     # Replace caret characters with double-star signs (exponentiation).
     new = __rewrite_expo(new)
