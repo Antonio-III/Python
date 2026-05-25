@@ -44,6 +44,9 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
         The new expression is passable to the `eval` function for evaluation.
     """
+    if not exp:
+        return exp
+
     exp = __rewrite_eq(exp)
 
     terms, signs = get_exps_btween_eqsigns(exp)
@@ -367,22 +370,25 @@ def __replace_sqrt(exp: str) -> str:
 
     return new
 
-def __get_sub_exp(exp: str, i: int) -> str:
+def __get_sub_exp(exp: str, i: int, par: str = "(") -> str:
     """Returns the sub-expression starting at the index `i`. The sub expression can be a number (whole or decimal) or an expression that starts and stops with a parenthesis.
 
     Args:
         exp: The mathematical expression.
         i: Starting point of the sub-expression.
+        par: The opening parenthesis type to look for when getting the expression. This feature was added to support getting the sub-expression at different stages of processing. Defaults to the opening parenthesis.
     """
-    if exp[i] != "(":
+    d = {"(": ")", "[": "]", "{": "}"}
+
+    if exp[i] != par:
         return __get_num(exp, i)
 
-    sub_exp = "("
+    sub_exp = par
     op = 1
     for c in exp[i+1::]:
-        if (c == "("):
+        if (c == par):
             op += 1
-        elif (c == ")"):
+        elif (c == d[par]):
             op -= 1
 
         sub_exp += c
@@ -511,6 +517,9 @@ def __replace_frac(exp: str) -> str:
     if (i < (exp_l:=len(exp)) ):
         new += exp[i: exp_l]
 
+    if (SPEC_CHAR in exp):
+        new = __replace_frac(new)
+
     return new
 
 def __check_unplugged_vars(exp: str) -> None:
@@ -562,20 +571,26 @@ def correct_exp_in_spec_commands(exp: str) -> str:
     Args:
         exp: The mathematical expression that contains special commands.
     """
-    start = stop = i = 0
     new = ""
+    i = 0
+    while (i < (len(exp))):
+        if exp[i] == "{":
+            sub_exp = __get_sub_exp(exp, i, "{")
+            temp = len(sub_exp)
 
-    while ( ((start:= exp.find("{", start)) != -1) and ((stop:= exp.find("}", stop)) != -1) ):
-        new += exp[i: start]
-        new += __pad_par(exp[start: stop+1])
-        i = stop + 1
-        
-        start += 1
-        stop += 1
+            # Remove the brackets that act as a container for the sub-expression so as to not mistake the conatiners as part of the sub-expression itself.
+            sub_exp = sub_exp[1:len(sub_exp)-1]
+            sub_exp = __pad_par(sub_exp)
 
-    if i < (exp_l:= len(exp)):
-        new += exp[i: exp_l]
+            sub_exp = correct_exp_in_spec_commands(sub_exp)
 
+            new += f"{{{sub_exp}}}"
+            i += temp
+
+            continue
+
+        new += exp[i]
+        i += 1
     return new
 
 
