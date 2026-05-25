@@ -13,6 +13,14 @@ SPEC_CMDS_FUNC = ["sqrt"]
 
 def main():
     exp, var_c, val = get_inputs()
+    
+    if not exp:
+        return
+    
+    # Input cleaning
+    val = __pad_pars(val)
+    notify_updated_val(val)
+    # ---
 
     new = rewrite(exp, var_c, val)
 
@@ -36,22 +44,22 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
     Args:
         exp: The mathematical expression.
-        var: The letter/s representing the unknown value/s.
-        val: The value/s to be plugged into the variable.
+        vars: The letter/s representing the unknown value/s.
+        vals: The value/s to be plugged into the variable.
 
     Returns:
         A cleaned expression where the solution has been plugged in. 
 
         The new expression is passable to the `eval` function for evaluation.
     """
+    if not exp:
+        return exp
+
     exp = __rewrite_eq(exp)
 
     terms, signs = get_exps_btween_eqsigns(exp)
 
-    terms_new = []
-    for term in terms:
-        term = __pad_par(term)
-        terms_new.append(term)
+    terms_new = __pad_pars(terms)
 
     new = "".join([f"{t}" + s for t, s in zip(terms_new, signs)])
     new += terms_new[-1]
@@ -60,14 +68,7 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
     new = clean_exp(new)
 
-    new = replace_spec_cmds(new)
-
-    # This is the only way to represent multiplication because I want this script to 
-    # support multi-character variables.
-    new = __rewrite_par(new)
-
     __check_unplugged_vars(new)
-
     return new
 
 def __rewrite_eq(exp: str) -> str:
@@ -177,45 +178,49 @@ def __rewrite_par(exp: str) -> str:
     return new
 
 def __pad_par(exp: str) -> str:
-    """Pad the expression with the complementing parenthesis on the side of the lesser parenthesis. 
+    """Pad the expression with the complementing bracket on the side of the lesser brackets. 
 
-    **The input assumes that all brackets are converted to parentheses.**
+    The function tracks these bracket types separately: `"()", "[]", "{}"`.
 
-    This allows evaluation support even if the user passes an expression with partial parentheses.
+    This allows evaluation support even if the user passes an expression with partial brackets.
 
     Args:
         exp: The mathematical expression.
 
     Returns:
-        A tuple containing the rewritten form of the mathematical expression where the parentheses are have been padded to be equal.
+        A tuple containing the rewritten form of the mathematical expression where the brackets have been padded to be equal.
     """
-    op = 0
-    cp = 0
+    d = {"(": ")", "[": "]", "{": "}"}
+
+    op = d.keys()
+    ed = d.values()
+
     new = ""
-    stack = []
+    opp_bracket = []
 
-    # Track the opening and closing parenthesis through a stack, as well as constructing the new expression.
+    # Track the opening and closing brackets (their opposite pair) through a stack, as well as constructing the new expression.
     for i in range(len(exp)):
-        if (exp[i] == "("):
-            stack.append(exp[i])
-            op += 1
+        if (exp[i] in op):
+            opp_bracket.append(d[exp[i]])
 
-        elif (exp[i] == ")"):
-            # When encountering a closed parenthesis, we check if we find a match in the parenthesis stack.
-            # If a match is found, we pop the corresponding opening parenthesis, and update its count.
-            # If no match, add the closed parenthesis to the stack, and update its count.
-            if (stack) and (stack[-1] == "("):
-                stack.pop()
-                op -= 1
+        elif (exp[i] in ed):
+            # When encountering a closed parenthesis, we check if its opposite is the newest item on the stack.
+            # If a match is found, we pop the newest stack item.
+            # If no match, add the opening pair of the ending bracket to the stack.
+            if (opp_bracket) and (opp_bracket[-1] == exp[i]):
+                opp_bracket.pop()
             else:
-                stack.append(exp[i])
-                cp += 1
+                opp = next((b for b in op if d[b] == exp[i]))
+                opp_bracket.append(opp)
 
         new += exp[i]
 
     # After constructing the new expression, we pad the expression with the complementing parenthesis based on the count of the opposing parenthesis (like pad the expression with opening parentheses for the same amount of times as the remaining closing parenthesis in the stack). Opening parenthesis will always be at the start and closing parenthesis at the end.
-    new = f"{'(' * cp}{new}"
-    new = f"{new}{')' * op}"
+    for par in opp_bracket:
+        if par in op:
+            new = f"{par}{new}"
+        elif par in ed:
+            new = f"{new}{par}"
 
     return new
 
@@ -367,22 +372,25 @@ def __replace_sqrt(exp: str) -> str:
 
     return new
 
-def __get_sub_exp(exp: str, i: int) -> str:
+def __get_sub_exp(exp: str, i: int, par: str = "(") -> str:
     """Returns the sub-expression starting at the index `i`. The sub expression can be a number (whole or decimal) or an expression that starts and stops with a parenthesis.
 
     Args:
         exp: The mathematical expression.
         i: Starting point of the sub-expression.
+        par: The opening parenthesis type to look for when getting the expression. This feature was added to support getting the sub-expression at different stages of processing. Defaults to the opening parenthesis.
     """
-    if exp[i] != "(":
+    d = {"(": ")", "[": "]", "{": "}"}
+
+    if exp[i] != par:
         return __get_num(exp, i)
 
-    sub_exp = "("
+    sub_exp = par
     op = 1
     for c in exp[i+1::]:
-        if (c == "("):
+        if (c == par):
             op += 1
-        elif (c == ")"):
+        elif (c == d[par]):
             op -= 1
 
         sub_exp += c
@@ -449,30 +457,24 @@ def get_inputs() -> tuple[str, list[str], list[str]]:
     var_c = input("Enter variable character/s:\n").split()
     val = input("Enter found value/s:\n").split()
 
-    # Input cleaning
-    val = clean_val(val)
-    notify_updated_val(val)
-    # ---
-
     return exp, var_c, val
 
-def clean_val(val: list[str]) -> list[str]:
-    """Cleans the inputted values so it's ready for evaluation.
+def __pad_pars(terms: list[str]) -> list[str]:
+    """Balances the parentheses count of each term.
 
-    This function is separated because 
     Args:
-        val: A list of inputted values.
+        terms: A list of terms.
 
     Returns:
-        A list of inputted values, but cleaner.
+        The list of terms, but each term has its parentheses corrected.
     """
-    new_val = []
+    new_terms = []
 
-    for val_ in val:
-        new = clean_exp(val_)
-        new_val.append(new)
+    for term in terms:
+        new = __pad_par(term)
+        new_terms.append(new)
 
-    return new_val
+    return new_terms
 
 def notify_updated_val(val: list[str]) -> None:
     """Prints the updated values in `val`.
@@ -510,6 +512,9 @@ def __replace_frac(exp: str) -> str:
 
     if (i < (exp_l:=len(exp)) ):
         new += exp[i: exp_l]
+
+    if (SPEC_CHAR in exp):
+        new = __replace_frac(new)
 
     return new
 
@@ -562,20 +567,28 @@ def correct_exp_in_spec_commands(exp: str) -> str:
     Args:
         exp: The mathematical expression that contains special commands.
     """
-    start = stop = i = 0
     new = ""
+    i = 0
+    while (i < (len(exp))):
+        if exp[i] == "{":
+            sub_exp = __get_sub_exp(exp, i, "{")
+            temp = len(sub_exp)
 
-    while ( ((start:= exp.find("{", start)) != -1) and ((stop:= exp.find("}", stop)) != -1) ):
-        new += exp[i: start]
-        new += __pad_par(exp[start: stop+1])
-        i = stop + 1
-        
-        start += 1
-        stop += 1
+            # Remove the brackets that act as a container for the sub-expression so as to not mistake the conatiners as part of the sub-expression.
+            sub_exp = sub_exp.removeprefix("{")
+            sub_exp = sub_exp.removesuffix("}")
 
-    if i < (exp_l:= len(exp)):
-        new += exp[i: exp_l]
+            sub_exp = __pad_par(sub_exp)
 
+            sub_exp = correct_exp_in_spec_commands(sub_exp)
+
+            new += f"{{{sub_exp}}}"
+            i += temp
+
+            continue
+
+        new += exp[i]
+        i += 1
     return new
 
 
@@ -632,17 +645,23 @@ def merge_mask(exp: str, exp_masked: str) -> str:
         An updated expression where all plugged values and special commands are in a single expression.
     """
     new = ""
+    spec_i = 0
     for i in range(len(exp_masked)):
         if (exp_masked[i] == SPEC_CHAR):
-            cmd = __get_nearest_cmd(exp, i)
+            spec_i = exp.find("\\", spec_i)
+            cmd = __get_nearest_cmd(exp, spec_i)
+            
+            spec_i += 1
+
             new += cmd
+
             continue
         new += exp_masked[i]
 
     return new
 
 def clean_exp(exp: str) -> str:
-    """Processes the mathematical expression so that its notation is clear for Python evaluation.
+    """Processes the mathematical expression so that its notation is clear for Python evaluation. The functions included here have tasks that apply to the whole expression.
 
     Args:
         exp: The mathematical expression.
@@ -661,6 +680,9 @@ def clean_exp(exp: str) -> str:
     # Replace caret characters with double-star signs (exponentiation).
     new = __rewrite_expo(new)
 
+    new = replace_spec_cmds(new)
+
+    new = __rewrite_par(new)
     return new
 
 def __get_nearest_cmd(exp: str, i: int) -> str:

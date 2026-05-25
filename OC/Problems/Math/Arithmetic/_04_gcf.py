@@ -6,7 +6,7 @@ def main():
     string = input("Enter numbers:\n").split()
 
     try:
-        num_list = [int(num) for num in string]
+        num_list = [int(eval(num)) for num in string]
     except ValueError as e:
         raise ValueError(f"Unwanted character in {string}") from e
     else:
