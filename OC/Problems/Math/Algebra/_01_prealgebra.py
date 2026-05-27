@@ -55,6 +55,9 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     if not exp:
         return exp
 
+    if not exp:
+        return exp
+
     exp = __rewrite_eq(exp)
 
     terms, signs = get_exps_btween_eqsigns(exp)
@@ -373,23 +376,31 @@ def __replace_sqrt(exp: str) -> str:
     return new
 
 def __get_sub_exp(exp: str, i: int, par: str = "(") -> str:
+def __get_sub_exp(exp: str, i: int, par: str = "(") -> str:
     """Returns the sub-expression starting at the index `i`. The sub expression can be a number (whole or decimal) or an expression that starts and stops with a parenthesis.
 
     Args:
         exp: The mathematical expression.
         i: Starting point of the sub-expression.
         par: The opening parenthesis type to look for when getting the expression. This feature was added to support getting the sub-expression at different stages of processing. Defaults to the opening parenthesis.
+        par: The opening parenthesis type to look for when getting the expression. This feature was added to support getting the sub-expression at different stages of processing. Defaults to the opening parenthesis.
     """
+    d = {"(": ")", "[": "]", "{": "}"}
+
+    if exp[i] != par:
     d = {"(": ")", "[": "]", "{": "}"}
 
     if exp[i] != par:
         return __get_num(exp, i)
 
     sub_exp = par
+    sub_exp = par
     op = 1
     for c in exp[i+1::]:
         if (c == par):
+        if (c == par):
             op += 1
+        elif (c == d[par]):
         elif (c == d[par]):
             op -= 1
 
@@ -512,6 +523,9 @@ def __replace_frac(exp: str) -> str:
 
     if (i < (exp_l:=len(exp)) ):
         new += exp[i: exp_l]
+
+    if (SPEC_CHAR in exp):
+        new = __replace_frac(new)
 
     if (SPEC_CHAR in exp):
         new = __replace_frac(new)
