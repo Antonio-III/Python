@@ -1,7 +1,6 @@
-"""Find the GCF between any amount of integers.
-
-_extended_summary_
+"""Find the GCF of any amount of integers.
 """
+
 def main():
     string = input("Enter numbers:\n").split()
 
@@ -32,6 +31,7 @@ def find_factors(n: int, unique: bool = True) -> list[int]:
         q2 = n//i
         if (q1 == q2):
             factors.append(i)
+            # When dividing a perfect square by its root, we can choose to ignore the "duplicate" number.
             if (q2 != i) or not unique:
                 factors.append(q2)
 
