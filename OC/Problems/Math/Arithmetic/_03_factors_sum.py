@@ -1,4 +1,4 @@
-from _04_gcf import find_factors
+from arithmetic import find_factors
 
 def main() -> None:
     factors = input("Enter quadratic coefficient and constant:\n").split()
@@ -8,44 +8,32 @@ def main() -> None:
 
     z = int(input("Target sum:\n"))
 
-    print(factors_sum_quadra(x, y, z))
+    print(factors_sum(x*y, z))
 
-def factors_sum(factors: list[int], x: int) -> tuple[int, int]:
-    
-    for i in range(len(factors)//2):
-        f1, f2 = factors[i], factors[-(i + 1)]
-        if x >= 0:
-            if (f1 + f2 == x):
+
+def factors_sum(x: int, y: int) -> tuple[int, int]:
+    """Return the pair of factors of `x` that sum to `y`.
+    """
+    # This function is made to quickly find factors of the middle coefficient in a quadratic expression, to see if it is factorable.
+
+    if not y:
+        return (0, y)
+
+    limit = int((abs(x)) ** 0.5)
+
+    for f1 in range(limit+1):
+        if (y % f1) == 0:
+            f2 = y//f1
+            if (f1 + f2 == y):
                 return (f1, f2)
-            if (-f1 + f2 == x):
+            if (-f1 + f2 == y):
                 return (-f1, f2)
-        elif x < 0:
-            if (f1 - f2 == x):
+            if (f1 - f2 == y):
                 return (f1, -f2)
-            if (-f1 - f2 == x):
+            if (-f1 - f2 == y):
                 return (-f1, -f2)
 
     return (0, 0)
-
-def factors_sum_quadra(x: int, y: int, z: int) -> tuple[int, int]:
-    prod = x*y
-    factors = find_factors(prod, unique=False)
-
-    for i in range(len(factors)//2):
-        f1, f2 = factors[i], factors[-(i + 1)]
-        if prod >= 0:
-            if (f1 + f2 == z):
-                return (f1, f2)
-            if (-f1 - f2 == z):
-                return (-f1, -f2)
-        elif prod < 0:
-            if (f1 - f2 == z):
-                return (f1, -f2)
-            if (-f1 + f2 == z):
-                return (-f1, f2)
-
-    return (0, 0)
-
 
 if __name__ == "__main__":
     main()
