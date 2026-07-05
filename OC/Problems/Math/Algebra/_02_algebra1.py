@@ -1,4 +1,4 @@
-from _03_prealgebra import __pad_par, __rewrite_par
+from _01_prealgebra import __pad_par, __rewrite_par
 
 # TODO: Add support for simplfiying variable terms (and exponents).
 # Ex: 1x + 2x = 3x and x^2 * x^3 = x^5.
@@ -409,54 +409,11 @@ def __is_neg(exp: str) -> bool:
 
 # ---
 
-def __is_divisible(dividend: int, divisor: int) -> bool:
-    q1 = dividend/divisor
-    q2 = dividend//divisor
-
-    return q1 == q2
-
 def __simplify_fraction(numerator: int, denominator: int):
     gcf = __find_GCF(numerator, denominator)
 
     return numerator//gcf, denominator//gcf
 
-def __find_GCF(n1: int, n2: int):
-    n1_factors = __find_factors(n1)
-    n2_factors = __find_factors(n2)
-
-    n1_flen = len(n1_factors)
-    n2_flen = len(n2_factors)
-
-    i = j = 1
-
-    gcf = 1
-    while ((i < n1_flen) and (j < n2_flen)):
-        if (n1_factors[i] == n2_factors[j]):
-            gcf = n1_factors[i]
-            i += 1
-            j += 1
-            continue
-
-        if n1_factors[i] < n2_factors[j]:
-            i += 1
-        elif n1_factors[i] > n2_factors[j]:
-            j += 1
-
-    return gcf
-
-def __find_factors(n: int) -> list[int]:
-    i = 1
-
-    factors = []
-    while (i**2 <= n):
-        q1 = n/i
-        q2 = n//i
-        if (q1 == q2):
-            factors.append(i)
-            factors.append(q2)
-
-        i += 1
-    return sorted(factors)
 
 
 

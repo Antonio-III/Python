@@ -1,4 +1,5 @@
-from _04_gcf import find_factors, __is_divisible
+from arithmetic import is_divisible
+from _04_gcf import find_factors
 
 # Relative to Math directory.
 PRIME_DIR = r"Arithmetic\Text\prime_numbers.txt"
@@ -42,7 +43,7 @@ def p_factorization(n: int) -> dict[int, int]:
             primes.append(next_prime(primes[ptr-1]))
             primes_len+= 1
 
-        if (__is_divisible(n, primes[ptr])):
+        if (is_divisible(n, primes[ptr])):
             # Perform division
             n = n//primes[ptr]
 
@@ -104,8 +105,9 @@ def __update_prime_txt(primes: list[int]) -> None:
 
     new_data = ",".join(map(str, primes_new))
     
-    with open(PRIME_DIR, "a") as prime_txt:
-        prime_txt.write(f",{new_data}")
+    if (new_data):
+        with open(PRIME_DIR, "a") as prime_txt:
+            prime_txt.write(f",{new_data}")
 
     return
 
