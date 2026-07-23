@@ -2,7 +2,7 @@ from arithmetic import is_divisible
 from _04_gcf import find_factors
 
 # Relative to Math directory.
-PRIME_DIR = r"Arithmetic\Text\prime_numbers.txt"
+PRIME_DIR = r"C:\Users\MICRO\Desktop\github-clones\Python\OC\Problems\Math\Arithmetic\Text\prime_numbers.txt"
 
 def main():
     x = input("Enter number:\n")
