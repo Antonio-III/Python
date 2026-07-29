@@ -57,12 +57,16 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
     exp = __rewrite_eq(exp)
 
-    terms, signs = get_exps_btween_eqsigns(exp)
+    sub_exps, signs = get_exps_btween_eqsigns(exp)
 
-    terms_new = __pad_pars(terms)
+    sub_exps = __pad_pars(sub_exps)
 
-    new = "".join([f"{t}" + s for t, s in zip(terms_new, signs)])
-    new += terms_new[-1]
+    if signs:
+        new = "".join([f"{t}" + s for t, s in zip(sub_exps, signs)])
+        assert(new) # if this string is empty, then one of the objects in the zip is empty (INCORRECT VALUE!)
+        new += sub_exps[-1]
+    else:
+        new = sub_exps[0]
 
     new = __plug_in_vars(new, vars, vals)
 
@@ -234,32 +238,31 @@ def get_exps_btween_eqsigns(exp: str) -> tuple[list[str], list[str]]:
         A list of expressions and signs found in the original expression.
     """
     signs = []
-    terms = []
+    sub_exps = []
 
     sign = ""
-    term = ""
+    sub_exp = ""
     exp_l = len(exp)
-
     for i in range(exp_l):
         if (exp[i] == "=" or exp[i] == "<" or exp[i] == ">"):
             sign += exp[i]
 
-            if term:
-                terms.append(term)
-                term = ""
+            if sub_exp:
+                sub_exps.append(sub_exp)
+                sub_exp = ""
 
         else:
-            term += exp[i]
+            sub_exp += exp[i]
 
             if sign:
                 signs.append(sign)
                 sign = ""
 
-    if term:
-        terms.append(term)
-        term = ""
+    if sub_exp:
+        sub_exps.append(sub_exp)
+        sub_exp = ""
 
-    return terms, signs
+    return sub_exps, signs
 
 def eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
     """Evaluation process for when the expression has an eq-inequality symbol.
