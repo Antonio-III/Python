@@ -57,6 +57,7 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     sub_exps, signs = get_subexps_and_eqsigns(exp)
 
     sub_exps = __pad_pars(sub_exps)
+    sub_exps = __pad_pars(sub_exps)
 
     new = combine_subexps_and_signs(sub_exps, signs)
 
@@ -185,8 +186,10 @@ def get_subexps_and_eqsigns(exp: str) -> tuple[list[str], list[str]]:
     """
     signs = []
     sub_exps = []
+    sub_exps = []
 
     sign = ""
+    sub_exp = ""
     sub_exp = ""
     exp_l = len(exp)
     for i in range(exp_l):
@@ -196,8 +199,12 @@ def get_subexps_and_eqsigns(exp: str) -> tuple[list[str], list[str]]:
             if sub_exp:
                 sub_exps.append(sub_exp)
                 sub_exp = ""
+            if sub_exp:
+                sub_exps.append(sub_exp)
+                sub_exp = ""
 
         else:
+            sub_exp += exp[i]
             sub_exp += exp[i]
 
             if sign:
@@ -207,7 +214,11 @@ def get_subexps_and_eqsigns(exp: str) -> tuple[list[str], list[str]]:
     if sub_exp:
         sub_exps.append(sub_exp)
         sub_exp = ""
+    if sub_exp:
+        sub_exps.append(sub_exp)
+        sub_exp = ""
 
+    return sub_exps, signs
     return sub_exps, signs
 
 def eval_exp(terms: list[str], signs: list[str]) -> bool:
