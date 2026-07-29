@@ -27,12 +27,9 @@ def main():
     # For debugging
     print(f"Expression: {new}")
     
-    terms, signs = get_exps_btween_eqsigns(new)
-    
-    if not signs:
-        res = eval(new)
-    else:
-        res = eval_exp_signs(terms, signs)
+    terms, signs = get_subexps_and_eqsigns(new)
+
+    res = eval_exp(terms, signs)
     
     print(f"Result: {res}")
 
@@ -57,12 +54,11 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
 
     exp = __rewrite_eq(exp)
 
-    terms, signs = get_exps_btween_eqsigns(exp)
+    sub_exps, signs = get_subexps_and_eqsigns(exp)
 
-    terms_new = __pad_pars(terms)
+    sub_exps = __pad_pars(sub_exps)
 
-    new = "".join([f"{t}" + s for t, s in zip(terms_new, signs)])
-    new += terms_new[-1]
+    new = combine_subexps_and_signs(sub_exps, signs)
 
     new = __plug_in_vars(new, vars, vals)
 
@@ -89,52 +85,6 @@ def __rewrite_eq(exp: str) -> str:
             if (exp[i+1] != "=") and (exp[i-1] != "=") and (exp[i-1] != "<") and (exp[i-1] != ">"):
                 new += "="
         new += exp[i]
-
-    return new
-
-def __rewrite_var(exp: str, vars: list[str]) -> str:
-    """
-    **DEPRECATED**
-
-    Rewrites the expression but explicitly adding a multiplication sign to any lone variable term.
-
-    For instance, `x` becomes `1*x` and `3y` becomes `3*y`.
-    Suppports variable terms longer than a single character.
-
-    Args:
-        exp: The mathematical expression.
-        var: The letter representing the unknown value.
-
-    Returns:
-        A copy of the original expression but all the lone variables have an explicit `1*` preceding it.
-    """
-
-    if not vars:
-        return exp
-
-    new = exp
-
-    # To support adding a 1* to multi-length variables, we have to copy CHUNKS of the expression, as opposed to copying every character individually.
-    # Loop through the list of variables.
-    for v in vars:
-        i = 0
-        temp = ""
-        v_l = len(v)
-
-        # Find the first instance of the current variable.
-        next = new.find(v, i)
-        while (next != -1):
-
-            temp += new[i: next]
-            if (next == 0) or (new[i-1] == "-") or not (new[i-1].isnumeric()):
-                temp += "1"
-
-            temp += f"*{v}"
-            i = next + v_l
-            next = new.find(v, i)
-
-        temp += exp[i: len(exp)]
-        new = temp
 
     return new
 
@@ -224,7 +174,7 @@ def __pad_par(exp: str) -> str:
 
     return new
 
-def get_exps_btween_eqsigns(exp: str) -> tuple[list[str], list[str]]:
+def get_subexps_and_eqsigns(exp: str) -> tuple[list[str], list[str]]:
     """Returns the expressions between the equality/inequality symbols and the symbols, found in the original expression.
 
     Args:
@@ -234,34 +184,33 @@ def get_exps_btween_eqsigns(exp: str) -> tuple[list[str], list[str]]:
         A list of expressions and signs found in the original expression.
     """
     signs = []
-    terms = []
+    sub_exps = []
 
     sign = ""
-    term = ""
+    sub_exp = ""
     exp_l = len(exp)
-
     for i in range(exp_l):
         if (exp[i] == "=" or exp[i] == "<" or exp[i] == ">"):
             sign += exp[i]
 
-            if term:
-                terms.append(term)
-                term = ""
+            if sub_exp:
+                sub_exps.append(sub_exp)
+                sub_exp = ""
 
         else:
-            term += exp[i]
+            sub_exp += exp[i]
 
             if sign:
                 signs.append(sign)
                 sign = ""
 
-    if term:
-        terms.append(term)
-        term = ""
+    if sub_exp:
+        sub_exps.append(sub_exp)
+        sub_exp = ""
 
-    return terms, signs
+    return sub_exps, signs
 
-def eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
+def eval_exp(terms: list[str], signs: list[str]) -> bool:
     """Evaluation process for when the expression has an eq-inequality symbol.
 
     Args:
@@ -271,6 +220,9 @@ def eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
     Returns:
         A boolean as result of the evaluation.
     """
+
+    if len(terms) == 1:
+        return eval(terms[0])
 
     eval_terms = [eval(t) for t in terms]
 
@@ -285,20 +237,6 @@ def eval_exp_signs(terms: list[str], signs: list[str]) -> bool:
 
     # Evaluate the expression and return the result.
     return eval(new)
-
-def eval_exp_no_sign(exp: str) -> int | float:
-    """**DEPRECATED**
-
-    Evaluation process for when the expression has no eq/inequality sign.
-
-    Args:
-        exp: The mathematical expression.
-
-    Returns:
-        A number as result of the evaluation.
-    """
-    res = eval(exp)
-    return res
 
 def __rewrite_expo(exp: str) -> str:
     """Replace caret characters in the expression with a double-star sign.
@@ -709,6 +647,23 @@ def __get_nearest_cmd(exp: str, i: int) -> str:
                 j = k
                 cmd = cmd_
     return cmd
+
+def combine_subexps_and_signs(sub_exps: list[str], signs: list[str]) -> str:
+    """Combine the subexpressions into a complete expression.
+
+    Args:
+        sub_exps: A list containing all the subexpressions found.
+        signs: A list containing all the signs found.
+    """
+    if signs:
+        new = "".join([f"{t}" + s for t, s in zip(sub_exps, signs)])
+        assert(new) # if this string is empty, then one of the objects in the zip is empty (INCORRECT VALUE!)
+        new += sub_exps[-1]
+    else:
+        new = sub_exps[0]
+
+    return new
+
 
 if __name__ == "__main__":
     main()

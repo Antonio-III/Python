@@ -6,11 +6,12 @@ def main():
     string = input("Enter numbers:\n").split()
 
     try:
-        num_list = [int(n) for n in string]
-    except ValueError as e:
-        raise ValueError(f"Invalid number in {string}") from e
-    else:
-        print(find_gcf(num_list))
+        assert(all([n.isnumeric() for n in string]))
+    except AssertionError as e:
+        raise AssertionError(f"Invalid number in {string}") from e
+
+    num_list = [eval(n) for n in string]     
+    print(find_gcf(num_list))
 
 def find_gcf(nums: list[int]):
     """Return the GCF of inputted numbers.
