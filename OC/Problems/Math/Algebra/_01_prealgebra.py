@@ -52,17 +52,12 @@ def rewrite(exp: str, vars: list[str], vals: list[str]) -> str:
     if not exp:
         return exp
 
-    exp = __rewrite_eq(exp)
-
-    sub_exps, signs = get_subexps_and_eqsigns(exp)
-
-    sub_exps = __pad_pars(sub_exps)
-
-    new = combine_subexps_and_signs(sub_exps, signs)
-
-    new = __plug_in_vars(new, vars, vals)
+    # Functions must be written AFTER this line.
+    new = exp
 
     new = clean_exp(new)
+
+    new = __plug_in_vars(new, vars, vals)
 
     __check_unplugged_vars(new)
     return new
@@ -148,7 +143,7 @@ def __pad_par(exp: str) -> str:
     new = ""
     opp_bracket = []
 
-    # Track the opening and closing brackets (their opposite pair) through a stack, as well as constructing the new expression.
+    # Track the opening and closing brackets (their opposite pair) through a stack `opp_bracket`, as well as constructing the new expression.
     for i in range(len(exp)):
         if (exp[i] in op):
             opp_bracket.append(d[exp[i]])
@@ -410,6 +405,8 @@ def __pad_pars(terms: list[str]) -> list[str]:
     new_terms = []
 
     for term in terms:
+        # if term[0] == "\\":
+        #     continue
         new = __pad_par(term)
         new_terms.append(new)
 
@@ -447,13 +444,10 @@ def __replace_frac(exp: str) -> str:
         den = __get_sub_exp(exp, i)
         i += len(den)
 
-        new += f"{num}/{den}"
+        new += f"({num}/{den})"
 
     if (i < (exp_l:=len(exp)) ):
         new += exp[i: exp_l]
-
-    if (SPEC_CHAR in exp):
-        new = __replace_frac(new)
 
     return new
 
@@ -521,6 +515,7 @@ def correct_exp_in_spec_commands(exp: str) -> str:
 
             sub_exp = correct_exp_in_spec_commands(sub_exp)
 
+            # syntax for including an op and ed curly bracket on a string.
             new += f"{{{sub_exp}}}"
             i += temp
 
@@ -532,7 +527,7 @@ def correct_exp_in_spec_commands(exp: str) -> str:
 
 
 def mask_spec_cmds(exp: str, cmd: str = "", eq_len: bool = False) -> str:
-    """Replaces special commands with a question mark character (`?`).
+    """Replaces all instances of the special command (`cmd`) with a question special character (`?`).
 
     **The input is assumed to have the correct amount of parentheses.**
 
@@ -551,7 +546,7 @@ def mask_spec_cmds(exp: str, cmd: str = "", eq_len: bool = False) -> str:
         return exp
 
     len_ = (len(cmd)+2) if eq_len else 1
-    return exp.replace(f"\\{cmd}", SPEC_CHAR)
+    return exp.replace(f"\\{cmd}", SPEC_CHAR*len_)
 
 def mask_func_calls(exp: str, eq_len: bool = False) -> str:
     """Replace function calls (only its characters) with a question mark (`?`).
@@ -602,14 +597,31 @@ def merge_mask(exp: str, exp_masked: str) -> str:
 def clean_exp(exp: str) -> str:
     """Processes the mathematical expression so that its notation is clear for Python evaluation. The functions included here have tasks that apply to the whole expression.
 
+    Contains the functions:
+    (Stage 1)
+    1. correct_exp_in_spec_commands
+    2. __replace_brackets
+    3. __rewrite_expo
+    4. replace_spec_cmds
+    5. __rewrite_par
+
+    (Stage 2)
+    1. get_subexps_and_eqsigns
+    2. __pad_pars
+    3. combine_subexps_and_signs
+
     Args:
         exp: The mathematical expression.
 
     Returns:
         The mathematical expression but it's notation is standardized.
     """
+    # Stage 1: Correct the overall expression.
+
     # Remove whitespaces from expression.
     new = exp.replace(" ", "")
+
+    new = __rewrite_eq(exp)
 
     new = correct_exp_in_spec_commands(new)
 
@@ -622,6 +634,14 @@ def clean_exp(exp: str) -> str:
     new = replace_spec_cmds(new)
 
     new = __rewrite_par(new)
+
+    # Stage 2: Correct the expressions between the in-equality signs.
+    sub_exps, signs = get_subexps_and_eqsigns(new)
+
+    sub_exps = __pad_pars(sub_exps)
+
+    new = combine_subexps_and_signs(sub_exps, signs)
+
     return new
 
 def __get_nearest_cmd(exp: str, i: int) -> str:

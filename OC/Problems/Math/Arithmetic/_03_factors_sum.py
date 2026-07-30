@@ -1,5 +1,3 @@
-from arithmetic import find_factors
-
 def main() -> None:
     factors = input("Enter quadratic coefficient and constant:\n").split()
     assert(len(factors) == 2)

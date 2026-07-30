@@ -1,19 +1,14 @@
 """Find the GCF of any amount of integers.
 """
-from arithmetic import find_factors
+from .arithmetic import find_factors
 
 def main():
     string = input("Enter numbers:\n").split()
 
-    try:
-        assert(all([n.isnumeric() for n in string]))
-    except AssertionError as e:
-        raise AssertionError(f"Invalid number in {string}") from e
-
     num_list = [eval(n) for n in string]     
-    print(find_gcf(num_list))
+    print(find_gcf(*num_list))
 
-def find_gcf(nums: list[int]):
+def find_gcf(*nums: int):
     """Return the GCF of inputted numbers.
     """
     assert(nums)
